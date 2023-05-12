@@ -22,6 +22,8 @@ jobs:
 
      - name: Build static file
        run: npm run build
+       env:
+         ACTIONS_STEP_DEBUG: true
 
      - name: Configure AWS Credentials
        uses: aws-actions/configure-aws-credentials@v1
