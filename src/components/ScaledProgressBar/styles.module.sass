@@ -1,0 +1,87 @@
+@import "../../styles/variables.sass"
+
+.ProgressBarContainer
+    position: relative
+
+.ProgressBar
+    background: linear-gradient(225deg, #FFFFFF 0%, #EAF2F4 100%)
+    box-shadow: 0px 3.09534px 15.4767px rgba(0, 0, 0, 0.2), inset -3.09534px 3.09534px 10.0599px rgba(119, 137, 158, 0.1), inset 1.54767px -1.54767px 6.96452px 1.54767px rgba(165, 176, 180, 0.5)
+    border-radius: 100px
+    overflow: hidden
+    display: flex
+    flex-direction: row
+    align-items: center
+    justify-content: flex-start
+
+    &.Vertical
+        align-items: flex-end
+
+.ProgressBarFill
+    box-shadow: 0px 3.09534px 15.4767px rgba(0, 0, 0, 0.2), inset -3.09534px 3.09534px 10.0599px rgba(119, 137, 158, 0.1), inset 1.54767px -1.54767px 6.96452px 1.54767px rgba(165, 176, 180, 0.5)
+    border-radius: 100px
+    height: 100%
+
+    &.Vertical
+        width: 100%
+
+.yellow
+    background: linear-gradient(225deg, #FFD700 0%, #FFEF9B 100%)
+
+.green
+    background: linear-gradient(225.01deg, #2CC93C -0.02%, #A8E445 100%)
+
+.blue
+    background: linear-gradient(225deg, #48a0c9 0%, #7ad0d6 100%)
+
+.red
+    background: linear-gradient(225deg, #c73838 0%, #db7171 100%)
+
+.ProgressBarScaleMarkerMiddle
+    position: absolute
+    left: 0
+    right: 0
+    bottom: 0
+    top: auto
+    display: flex
+    flex-direction: column
+    align-items: center
+    justify-content: center
+
+    &.Vertical
+        flex-direction: row
+        bottom: 0
+        top: 0
+        right: 0
+        left: auto
+
+.ProgressBarScaleMarkerEnd
+    position: absolute
+    right: 0
+    bottom: 0
+    display: flex
+    align-items: center
+    justify-content: center
+    flex-direction: column
+
+    &.Vertical
+        top: 0
+        bottom: auto
+        flex-direction: row
+
+.ProgressBarScaleMarkerText
+    width: 20px
+    font-family: $font-family
+    font-size: 1rem
+    font-weight: 600
+    text-align: center
+
+    &.Vertical
+        width: auto
+        margin-right: 5px
+
+.ProgressBarScaleMarkerLine
+    width: 3px
+    background: #2B170C
+
+    &.Vertical
+        height: 2px

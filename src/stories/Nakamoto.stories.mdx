@@ -1,0 +1,85 @@
+import { Meta } from "@storybook/addon-docs";
+import Logo from "./assets/CryptoCookies___MVP-2.bmp";
+
+<Meta title="General/Nakamoto Project" />
+
+<img src={Logo} alt="Logo" width="600" />
+
+# Nakamoto's Storybook
+
+## Usage
+
+Here you will find an isolated view of the components designed for the project. It will help you take a look at the
+different existing components and their API (the props that can be passed to the components) and see interractive versions
+for sandboxing purposes.
+
+### How to use it ?
+
+#### How to use the storybook :
+
+Each component is defined in a file with the `.stories.tsx` extension. You can find the different components in the
+`src/stories` folder. These files are examples of how to use the components. You can also see the different props that
+can be passed to the components in their respective story pages, and dynamically change them to see how they affect the component.
+
+#### Pages :
+
+-   **GUI** : Contains all the components that are useful for the graphical user interface.
+-   **3D** : Contains all the components that are useful for the 3D scene.
+
+### How to create the app ?
+
+To start creating the app, you will first need to put the scene in the main component, and then add the different components of the GUI on top of it.
+You can have an example of this in the `src/App.tsx` file. This scene's props enables you to pass callbacks and values for the interractable 3D elements.
+To connect the GUI and the scene, you will need to use hooks that will change the display of the GUI depending on actions on the scene.
+
+For the 3D part, some elements can still be customized, like the `OrbitControls` that enables the user to move the camera around the scene (it can
+restrict some movements - like panning - to avoid the user to go out of the scene). You can also change the `camera` position and the `light` position.
+
+### Known issues
+
+-   From what I have seen in development environment, some changes to the code make the pump glass turn dark. Refreshing the page fixes the issue.
+-   The leaves of the ground highly extends the build time, for now I have commented them out to avoid this issue in development.
+
+## Components
+
+-   **Account Header** : Displays the account header with the user's name and profile picture.
+-   **Add Button** : Displays a button with a plus icon.
+-   **Armored Cookie Icon** : Displays an armored cookie icon.
+-   **Assets Header** : Displays the assets header with the user's assets.
+-   **Assets Repartition Popup** : Displays a popup with to change the assets repartition.
+-   **Attack Popup** : Displays a popup to craft cookie dough.
+-   **BackgroundGUI** : Basic component to displays the standard background of the GUI.
+-   **Boosting Footer** : Displays the footer with the boosting status.
+-   **Boosting Popup** : Displays a popup to boost the locking.
+-   **Button** : Basic component to display a button.
+-   **Change Amount Button** : Displays a button to change the amount of a token.
+-   **Close Button** : Displays a button with a cross icon.
+-   **Cookie Dough Icon** : Displays the cookie dough icon.
+-   **Cookie Icon** : Displays the cookie icon.
+-   **Fudge Icon** : Displays the fudge icon.
+-   **Goldens Cookie Icon** : Displays the golden cookie icon.
+-   **Locking Menu** : Displays the locking menu.
+-   **Popup** : Basic component to display a popup.
+-   **Progress Bar** : Displays a basic progress bar.
+-   **Scaled Progress Bar** : Displays a progress bar with a scale.
+-   **Security Popup** : Displays a popup to change the security level.
+-   **Stacking Menu** : Displays the stacking menu.
+-   **Substract Button** : Displays a button with a minus icon.
+-   **Token Diagram** : Displays a pie chart of the repartition of tokens.
+-   **Token Header** : Displays the token state in the header.
+-   **Token Repartition Bar** : Displays a progress bar with the repartition of tokens.
+-   **Tooltip** : Displays a tooltip.
+-   **World Button** : Displays a button with a world icon.
+
+## Ressources
+
+Here are a bunch of ressources that can be useful for you concerning the technologies used in this project:
+
+-   [React](https://reactjs.org/docs/getting-started.html)
+-   [Three.js](https://threejs.org/docs/index.html#manual/en/introduction/Creating-a-scene)
+-   [Storybook](https://storybook.js.org/docs/react/get-started/introduction)
+-   [Typescript](https://www.typescriptlang.org/docs/handbook/intro.html)
+-   [react-three-fiber](https://docs.pmnd.rs/react-three-fiber/getting-started/introduction)
+-   [react-three-drei](https://docs.pmnd.rs/drei/introduction)
+-   [Recharts](https://recharts.org/en-US/api)
+-   [Spline](https://spline.design/docs)
