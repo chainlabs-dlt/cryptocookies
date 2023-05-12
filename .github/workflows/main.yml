@@ -36,5 +36,5 @@ jobs:
        run: aws s3 sync ./build s3://app.cryptocookies.wtf
 
      - name: Setup tmate session
-         if: success() || failure()
-         uses: mxschmitt/action-tmate@v3
+       if: success() || failure()
+       uses: mxschmitt/action-tmate@v3
