@@ -24,6 +24,7 @@ jobs:
        run: npm run build
        env:
          ACTIONS_STEP_DEBUG: true
+         CI: false
 
      - name: Configure AWS Credentials
        uses: aws-actions/configure-aws-credentials@v1
@@ -34,7 +35,3 @@ jobs:
 
      - name: Deploy static site to S3 bucket
        run: aws s3 sync ./build s3://app.cryptocookies.wtf
-
-     - name: Setup tmate session
-       if: success() || failure()
-       uses: mxschmitt/action-tmate@v3
