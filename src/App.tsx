@@ -6,14 +6,21 @@ import BoostingFooter from "./components/BoostingFooter";
 import WorldButton from "./components/WorldButton";
 import Scene from "./components/3DScene/Scene";
 import { TokenType } from "./utils/TokenType";
-import { Canvas } from "@react-three/fiber";
+import { Canvas, act } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import "./App.css";
+import { useEthers, useEtherBalance } from '@usedapp/core'
+import { formatEther } from '@ethersproject/units'
+import { Chainlabs } from ".";
+
 
 function App() {
+	const { activateBrowserWallet, account, deactivate } = useEthers();
+	const chainlabsBalance = useEtherBalance(account, { chainId: Chainlabs.chainId });
+
 	return (
 		<div className="App">
-			
+
 			{/* Suspense is used to wait for the component to load (here the content of the canvas) */}
 			<Suspense fallback={null}>
 				{/* The canvas displays all the 3D elements */}
@@ -47,24 +54,29 @@ function App() {
 					<OrbitControls enablePan={true} />
 				</Canvas>
 			</Suspense>
-			
+
 			{/* Start of the GUI Part, to complete with what you wish and your business logic*/}
 
 			<div className="GUIAccountHeader">
 				<AccountHeader
-					onClick={function (): void {}}
-					accountName={"Dimitri"}
-					infos={"#1054 Suisse"}
+					onClick={function (): void {
+						if(!account) activateBrowserWallet();
+						else deactivate();
+					}}
+					accountName={account ? account.substring(0, 7) + "..." + account.substring(37, 42) : "Unconnected"}
+					infos={account ?
+						(chainlabsBalance ? Chainlabs.nativeCurrency?.symbol + " " + formatEther(chainlabsBalance) : "")
+						: "Click to connect"}
 				/>
 				<AssetsHeader
 					defensePercentage={50}
 					attackPercentage={50}
 					defensePoints={5}
 					attackPoints={10}
-					onClick={function (): void {}}
+					onClick={function (): void { }}
 				/>
 				<TokenHeader
-					onClick={function (): void {}}
+					onClick={function (): void { }}
 					stackingPercent={10}
 					lockingPercent={30}
 					token={TokenType.COOKIE}
@@ -73,7 +85,7 @@ function App() {
 				/>
 			</div>
 			<div className="GUIBoostingFooter">
-				<WorldButton onClick={function (): void {}} />
+				<WorldButton onClick={function (): void { }} />
 				<BoostingFooter value={15} maxValue={20} width={300} height={20} />
 			</div>
 		</div>
