@@ -60,7 +60,7 @@ function App() {
 			<div className="GUIAccountHeader">
 				<AccountHeader
 					onClick={function (): void {
-						if(!account) activateBrowserWallet();
+						if (!account) activateBrowserWallet();
 						else deactivate();
 					}}
 					accountName={account ? account.substring(0, 7) + "..." + account.substring(37, 42) : "Unconnected"}
@@ -75,14 +75,24 @@ function App() {
 					attackPoints={10}
 					onClick={function (): void { }}
 				/>
-				<TokenHeader
-					onClick={function (): void { }}
-					stackingPercent={10}
-					lockingPercent={30}
-					token={TokenType.COOKIE}
-					amount={32350}
-					output={2}
-				/>
+				<div className="GUIGameTokens">
+					<TokenHeader
+						onClick={function (): void { }}
+						stackingPercent={10}
+						lockingPercent={30}
+						token={TokenType.FUDGE}
+						amount={32350}
+						output={2}
+					/>
+					<TokenHeader
+						onClick={function (): void { }}
+						stackingPercent={40}
+						lockingPercent={30}
+						token={TokenType.COOKIE}
+						amount={50000}
+						output={2}
+					/>
+				</div>
 			</div>
 			<div className="GUIBoostingFooter">
 				<WorldButton onClick={function (): void { }} />
