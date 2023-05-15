@@ -12,8 +12,8 @@ export const Chainlabs: Chain = {
   isLocalChain: false,
   getExplorerAddressLink: () => '',
   getExplorerTransactionLink: () => '',
-  multicall2Address: '0x2E710B9fAEbf0a86F40bCe9BF4931cC1A371895F', 
-  multicallAddress: '0x85905BD5B26755e524FB871c25Dfc632C187E5eF', 
+  multicall2Address: '', 
+  multicallAddress: '0x2b7e1973951d4Ad66Bb17A81797d38d4533c94E2', 
   nativeCurrency: {
     name: 'Chainlabs Ether',
     symbol: 'ETH',
