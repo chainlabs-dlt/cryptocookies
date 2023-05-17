@@ -1,10 +1,10 @@
-// SPDX-License-Identifier: unlicensed
-// Copyright © 2023 Chainlabs Switzerland SA
-// All Rights Reserved
+/// SPDX-License-Identifier: unlicensed
+/// Copyright © 2023 Chainlabs Switzerland SA
+/// All Rights Reserved
 
 pragma solidity ^0.8.18;
 
-import "./Math.sol";
+import "./Math2.sol";
 
 library RevDistr {
 	uint256 public constant START_INCREMENT_PER_REVENUE = (2 ** 128) - 1;
@@ -22,13 +22,10 @@ library RevDistr {
 		uint256 index; // The index at last (global) update
 	}
 
-	/**
-	 * @notice Computes the newest global index.
-	 *
-	 * @param _globalState The lazy global state
-	 * @param _revenue The new revenue coming in
-	 * @return index The new updated index
-	 */
+	/// @notice Computes the newest global index.
+	///	@param _globalState The lazy global state.
+	/// @param _revenue The new revenue coming in.
+	/// @return index The new updated index.
 	function updatedGlobalIndex(
 		LazyGlobalState memory _globalState,
 		uint256 _revenue
@@ -36,13 +33,10 @@ library RevDistr {
 		return _globalState.index + uint256(_globalState.incrementPerRevenue) * _revenue;
 	}
 
-	/**
-	 * @notice Computes the freshly acquired revenue.
-	 *
-	 * @param _userState The lazy user state
-	 * @param _updatedGlobalIndex The newest global index
-	 * @return freshOwn The new updated added revenue
-	 */
+	/// @notice Computes the freshly acquired revenue.
+	/// @param _userState The lazy user state.
+	/// @param _updatedGlobalIndex The newest global index.
+	/// @return freshOwn The new updated added revenue.
 	function updatedfreshOwn(
 		LazyUserState memory _userState,
 		uint256 _updatedGlobalIndex
@@ -50,7 +44,7 @@ library RevDistr {
 		return
 			_userState.ownStake == 0
 				? 0
-				: Math.mulDiv(
+				: Math2.mulDiv(
 					_updatedGlobalIndex - _userState.lastGlobalState.index,
 					_userState.ownStake,
 					uint256(_userState.lastGlobalState.incrementPerRevenue) *
@@ -58,26 +52,20 @@ library RevDistr {
 				);
 	}
 
-	/**
-	 * @notice Updates the lazy user state with the new fresh revenue.
-	 *
-	 * @param _userState The lazy user state
-	 * @param _freshOwn The newly acquired revenue
-	 */
+	/// @notice Updates the lazy user state with the new fresh revenue.
+	/// @param _userState The lazy user state.
+	/// @param _freshOwn The newly acquired revenue.
 	function updateLazyUser(LazyUserState storage _userState, uint256 _freshOwn) internal {
 		_userState.ownAccumulatedTotal = uint128(
 			uint256(_userState.ownAccumulatedTotal) + _freshOwn
 		);
 	}
 
-	/**
-	 * @notice Synchronizes the lazy user state with the newest
-	 * lazy global state and own stake.
-	 *
-	 * @param _userState The lazy user state
-	 * @param _globalState The lazy global state to sync
-	 * @param _ownStake The newest user own stake
-	 */
+	/// @notice Synchronizes the lazy user state with the newest
+	/// lazy global state and own stake.
+	/// @param _userState The lazy user state.
+	/// @param _globalState The lazy global state to sync.
+	/// @param _ownStake The newest user own stake.
 	function syncUser(
 		LazyUserState storage _userState,
 		LazyGlobalState memory _globalState,
@@ -87,12 +75,9 @@ library RevDistr {
 		_userState.ownStake = uint128(_ownStake);
 	}
 
-	/**
-	 * @notice Adapts the lazy global state with a change in total stake.
-	 *
-	 * @param _globalState The lazy global state
-	 * @param _change The total stake change
-	 */
+	/// @notice Adapts the lazy global state with a change in total stake.
+	/// @param _globalState The lazy global state.
+	/// @param _change The total stake change.
 	function adaptLazyGlobal(LazyGlobalState storage _globalState, int256 _change) internal {
 		uint256 oldTotalStake = uint256(_globalState.totalStake);
 		uint256 newTotalStake = uint256(int256(oldTotalStake) + _change);
@@ -107,16 +92,13 @@ library RevDistr {
 		_globalState.totalStake = uint128(newTotalStake);
 	}
 
-	/**
-	 * @notice Performs a given user ownStake change.
-	 * 1. Updates the user with the new revenue.
-	 * 2. Adapts the global state with the new stake change.
-	 * 3. Sync user with global state and adapt stake.
-	 *
-	 * @param _globalState The lazy global state
-	 * @param _userState The lazy user state
-	 * @param _change The change (positive or negative)
-	 */
+	/// @notice Performs a given user ownStake change.
+	/// 1. Updates the user with the new revenue.
+	/// 2. Adapts the global state with the new stake change.
+	/// 3. Sync user with global state and adapt stake.
+	/// @param _globalState The lazy global state.
+	/// @param _userState The lazy user state.
+	/// @param _change The change (positive or negative).
 	function userChangePool(
 		LazyGlobalState storage _globalState,
 		LazyUserState storage _userState,
@@ -135,14 +117,11 @@ library RevDistr {
 		syncUser(_userState, _globalState, uint256(int256(uint256(_userState.ownStake)) + _change));
 	}
 
-	/**
-	 * @notice Returns the current claimable reward amount.
-	 * Strictly monotonic function, until a claim resets the value to 0.
-	 *
-	 * @param _userState The lazy user state
-	 * @param _index The latest global index
-	 * @return claimable The claimable amount
-	 */
+	/// @notice Returns the current claimable reward amount.
+	/// Strictly monotonic function, until a claim resets the value to 0.
+	/// @param _userState The lazy user state.
+	/// @param _index The latest global index.
+	/// @return claimable The claimable amount.
 	function claimable(
 		LazyUserState memory _userState,
 		uint256 _index
@@ -153,13 +132,10 @@ library RevDistr {
 		return accumulated - uint256(_userState.alreadyClaimedTotal);
 	}
 
-	/**
-	 * @notice Effectively claims all pending rewards.
-	 *
-	 * @param _userState The lazy user state
-	 * @param _index The latest global index
-	 * @return amountClaimed The amount that has been claimed
-	 */
+	/// @notice Effectively claims all pending rewards.
+	/// @param _userState The lazy user state.
+	/// @param _index The latest global index.
+	/// @return amountClaimed The amount that has been claimed.
 	function claim(
 		LazyUserState storage _userState,
 		uint256 _index
@@ -172,12 +148,9 @@ library RevDistr {
 		);
 	}
 
-	/**
-	 * @notice Adds revenue to the pool.
-	 *
-	 * @param _globalState The lazy global state
-	 * @param _amount The amount of revenue added
-	 */
+	/// @notice Adds revenue to the pool.
+	/// @param _globalState The lazy global state.
+	/// @param _amount The amount of revenue added.
 	function addRevenue(LazyGlobalState storage _globalState, uint256 _amount) internal {
 		_globalState.index = updatedGlobalIndex(_globalState, _amount);
 	}
