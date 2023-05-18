@@ -51,6 +51,8 @@ contract BaseERC20Distr {
 	/// @dev Changes the stake of a given user in the distributor.
 	/// This function performs no security checks so its visibility
 	/// should remain internal.
+	/// @param _user The target user.
+	/// @param _change The change in stake.
 	function _userChangeStake(address _user, int256 _change) internal {
 		RevDistr.userChangePool(globalState, usersState[_user], _change);
 	}
@@ -58,5 +60,5 @@ contract BaseERC20Distr {
 	/// @dev Called at every claim call, this function should be overwritten
 	/// if an automatic injection needs to be performed before claiming.
 	/// By default does nothing.
-	function _claimHook() internal {}
+	function _claimHook() internal virtual {}
 }

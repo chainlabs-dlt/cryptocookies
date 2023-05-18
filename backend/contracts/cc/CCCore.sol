@@ -1,9 +1,8 @@
 /// SPDX-License-Identifier: UNLICENSED
 /// Copyright © 2023 Chainlabs Switzerland SA
 /// All Rights Reserved
-
+/*
 import "../wtf/WtfApp.sol";
-import "../wtf/distributors/BaseERC20Distr.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 pragma solidity ^0.8.18;
@@ -35,3 +34,4 @@ contract CCCore is WtfApp {
 		require(CKI.transfer(msg.sender, _amount));
 	}
 }
+*/
