@@ -142,7 +142,6 @@ library RevDistr {
 	) internal returns (uint256 amountClaimed) {
 		amountClaimed = claimable(_userState, _index);
 
-		// Updating claimable balance first unsures the absence of infinite loop
 		_userState.alreadyClaimedTotal = uint128(
 			uint256(_userState.alreadyClaimedTotal) + amountClaimed
 		);
