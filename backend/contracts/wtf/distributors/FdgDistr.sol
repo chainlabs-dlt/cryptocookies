@@ -5,6 +5,7 @@
 pragma solidity ^0.8.18;
 
 import "./BaseERC20Distr.sol";
+import "hardhat/console.sol";
 
 /// @title Wtf's Fudge (FDG) Distributor
 /// @author Chainlabs Switzerland SA
@@ -40,6 +41,7 @@ contract FdgDistr is BaseERC20Distr {
 
 		_triggerFlatDistr();
 		flatDistr.distrBuffer = uint128(uint256(flatDistr.distrBuffer) + _amount);
+		flatDistr.lastDistr = uint40(block.timestamp);
 	}
 
 	/// @notice Changes the stake of a given app in the distributor.
@@ -52,23 +54,24 @@ contract FdgDistr is BaseERC20Distr {
 	}
 
 	/// @dev Effectively "flattens" all Fudge (FDG) injections over FLATTEN_PERIOD.
+	/// NOTE: This function recalculates a new linear distribution rate over FLATTEN_PERIOD.
 	function _triggerFlatDistr() internal {
 		uint256 lastDistr = uint256(flatDistr.lastDistr);
 		uint256 distrBuffer = uint256(flatDistr.distrBuffer);
 		uint256 elapsed = block.timestamp - lastDistr;
 
-		if (elapsed == 0) return;
+		if (elapsed == 0 || distrBuffer == 0) return;
 
 		if (elapsed >= FLATTEN_PERIOD) {
 			RevDistr.addRevenue(globalState, distrBuffer);
 			flatDistr.distrBuffer = 0;
 		} else {
-			uint256 rev = (elapsed * distrBuffer) / lastDistr;
-			RevDistr.addRevenue(globalState, distrBuffer);
+			uint256 rev = (elapsed * distrBuffer) / FLATTEN_PERIOD;
+			RevDistr.addRevenue(globalState, rev);
 			flatDistr.distrBuffer = uint128(distrBuffer - rev);
 		}
 
-		flatDistr.lastDistr = uint40(block.timestamp - elapsed);
+		flatDistr.lastDistr = uint40(block.timestamp);
 	}
 
 	/// @dev Automatically triggers a flatten distribution.
