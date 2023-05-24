@@ -147,6 +147,8 @@ describe("CkiDistr", function () {
             // 1/2 - 1/2
             await ckiDistr.appChangeStake(accounts[0].address, ETHER);
             await ckiDistr.appChangeStake(accounts[1].address, ETHER);
+            // Should have no effect
+            await time.increase(halfLife);
 
             // Inject 1000 CKI
             // Cannot be too small due to rounding errors
@@ -175,6 +177,40 @@ describe("CkiDistr", function () {
             await ckiDistr.connect(accounts[1]).claim();
             expect(await erc20.balanceOf(accounts[1].address)).to.be.lessThanOrEqual(injected.div(8).mul(3));
             expect(await erc20.balanceOf(accounts[1].address)).to.be.greaterThan(injected.div(8).mul(3).sub(100));
+        });
+
+        it("Should distribute half after half-life period when multiple injections", async function () {
+            const {erc20, ckiDistr, other, halfLife} = await loadFixture(deployEmptyFixture);
+
+            // 1
+            await ckiDistr.appChangeStake(other.address, ETHER);
+            // Should have no effect
+            await time.increase(halfLife);
+
+            // Inject 1000 CKI
+            // Cannot be too small due to rounding errors
+            const injected0 = ETHER.mul(1000);
+            await erc20.approve(ckiDistr.address, injected0);
+            await ckiDistr.injectInvExp(1000);
+
+            await time.increase(halfLife);
+
+            expect(await erc20.balanceOf(other.address)).to.be.equal(0);
+            await ckiDistr.connect(other).claim();
+            expect(await erc20.balanceOf(other.address)).to.be.lessThanOrEqual(injected0.div(2));
+            expect(await erc20.balanceOf(other.address)).to.be.greaterThan(injected0.div(2).sub(100));
+
+            // Inject 2000 CKI
+            // Cannot be too small due to rounding errors
+            const injected1 = ETHER.mul(2000);
+            await erc20.approve(ckiDistr.address, injected1);
+            await ckiDistr.injectInvExp(2000);
+
+            await time.increase(halfLife);
+
+            await ckiDistr.connect(other).claim();
+            expect(await erc20.balanceOf(other.address)).to.be.lessThanOrEqual(injected0.div(4).mul(3).add(injected1.div(2)));
+            expect(await erc20.balanceOf(other.address)).to.be.greaterThan(injected0.div(4).mul(3).add(injected1.div(2)).sub(100));
         });
     });
 });

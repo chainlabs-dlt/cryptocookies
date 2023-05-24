@@ -6,7 +6,6 @@ pragma solidity ^0.8.18;
 
 import "./BaseERC20Distr.sol";
 import "../libraries/ABDKMath64x64.sol";
-import "hardhat/console.sol";
 
 /// @title Wtf's Cookie (CKI) Distributor
 /// @author Chainlabs Switzerland SA
@@ -22,13 +21,13 @@ contract CkiDistr is BaseERC20Distr {
 		int128 c;
 		// The previous integral calculation, already distributed:
 		// F(lastUpdate) = lastDistr
-		uint128 lastDistr;
-		int128 elapsed;
+		uint88 lastDistr;
+		// For optimization purposes
+		uint40 lastTrigger;
 	}
 
 	address public immutable GAUGE;
 	int128 public immutable EM_GAMMA;
-	int128 public immutable T0;
 
 	InvExpDistr public invExpDistr;
 
@@ -39,7 +38,6 @@ contract CkiDistr is BaseERC20Distr {
 	constructor(address _cki, address _gauge, uint256 _emGamma) BaseERC20Distr(_cki) {
 		GAUGE = _gauge;
 		EM_GAMMA = ABDKMath64x64.fromUInt(_emGamma);
-		T0 = ABDKMath64x64.fromUInt(block.timestamp);
 	}
 
 	/// @notice Injection of Cookie (CKI) over an inverse exponential schedule.
@@ -51,9 +49,23 @@ contract CkiDistr is BaseERC20Distr {
 	function injectInvExp(uint256 _amount) external {
 		require(TOKEN.transferFrom(msg.sender, address(this), _amount * 10 ** 18));
 
-		_triggerInvExpDistr();
-		int128 evol = invExpDistr.elapsed.div(EM_GAMMA).exp().mul(ABDKMath64x64.fromUInt(_amount));
+		// Intermediate computations for efficiency
+		int128 elapsed = ABDKMath64x64.fromUInt(block.timestamp);
+		int128 pwr = elapsed.div(EM_GAMMA);
+		int128 exp = pwr.neg().exp();
+
+		// Indirect _triggerInvExpDistr() call
+		uint256 rev = ABDKMath64x64.toUInt(invExpDistr.c.sub(invExpDistr.c.mul(exp)));
+		RevDistr.addRevenue(globalState, (rev - uint256(invExpDistr.lastDistr)) * 10 ** 18);
+		invExpDistr.lastTrigger = uint40(block.timestamp);
+
+		// Update c factor
+		int128 evol = pwr.exp().mul(ABDKMath64x64.fromUInt(_amount));
 		invExpDistr.c = invExpDistr.c.add(evol);
+
+		// Update lastDist to take into account T0 offset
+		rev = ABDKMath64x64.toUInt(invExpDistr.c.sub(invExpDistr.c.mul(exp)));
+		invExpDistr.lastDistr = uint88(rev);
 	}
 
 	/// @notice Changes the stake of a given app in the distributor.
@@ -66,16 +78,17 @@ contract CkiDistr is BaseERC20Distr {
 	}
 
 	function _triggerInvExpDistr() internal {
-		int128 newElapsed = ABDKMath64x64.fromUInt(block.timestamp).sub(T0);
-		// No precision errors possible as no fractional part
-		if (invExpDistr.elapsed == newElapsed) return;
+		// For optimization purposes
+		if (invExpDistr.lastTrigger == block.timestamp) return;
 
-		int128 exp = newElapsed.div(EM_GAMMA).neg().exp();
+		int128 elapsed = ABDKMath64x64.fromUInt(block.timestamp);
+
+		int128 exp = elapsed.div(EM_GAMMA).neg().exp();
 		uint256 rev = ABDKMath64x64.toUInt(invExpDistr.c.sub(invExpDistr.c.mul(exp)));
 
 		RevDistr.addRevenue(globalState, (rev - uint256(invExpDistr.lastDistr)) * 10 ** 18);
-		invExpDistr.lastDistr = uint128(rev);
-		invExpDistr.elapsed = newElapsed;
+		invExpDistr.lastDistr = uint88(rev);
+		invExpDistr.lastTrigger = uint40(block.timestamp);
 	}
 
 	/// @dev Automatically triggers an inverse exponential distribution.
