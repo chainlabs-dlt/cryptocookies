@@ -151,6 +151,7 @@ library RevDistr {
 	/// @param _globalState The lazy global state.
 	/// @param _amount The amount of revenue added.
 	function addRevenue(LazyGlobalState storage _globalState, uint256 _amount) internal {
+		if (_amount == 0) return;
 		_globalState.index = updatedGlobalIndex(_globalState, _amount);
 	}
 }

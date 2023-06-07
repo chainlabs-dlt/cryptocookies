@@ -59,6 +59,7 @@ contract FdgDistr is BaseERC20Distr {
 		uint256 distrBuffer = uint256(flatDistr.distrBuffer);
 		uint256 elapsed = block.timestamp - lastDistr;
 
+		// For optimization purposes
 		if (elapsed == 0 || distrBuffer == 0) return;
 
 		if (elapsed >= FLATTEN_PERIOD) {
