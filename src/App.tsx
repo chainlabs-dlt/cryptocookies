@@ -9,14 +9,48 @@ import { TokenType } from "./utils/TokenType";
 import { Canvas, act } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import "./App.css";
-import { useEthers, useEtherBalance } from '@usedapp/core'
+
+import { Contract, BigNumber, utils } from 'ethers'
+import CKI from "./abis/Cki.json";
+import { useEthers, useEtherBalance, useCall, useContractFunction } from '@usedapp/core'
 import { formatEther } from '@ethersproject/units'
 import { Chainlabs } from ".";
+import StackingMenu from "./components/StackingMenu";
 
+function Bal(tokenAddress: string, account: string | undefined): BigNumber | undefined {
+	const { value, error } = useCall(account && {
+	  contract: new Contract(tokenAddress, new utils.Interface(CKI)),
+	  method: 'balanceOf',
+	  args: [account]
+	}) ?? {}
+	if(error) {
+	  console.error(error.message)
+	  return undefined
+	}
+	console.warn(value);
+	return value?.[0]
+ }
+
+ function Mint(tokenAddress: string) {
+	const contract = new Contract(tokenAddress, new utils.Interface(CKI))
+
+	const { send } = useContractFunction(contract, 'devMint', {
+		transactionName: 'Mint',
+		gasLimitBufferPercentage: 10,
+	})
+
+	return (amount: BigNumber) => {
+		void send(amount);
+	}
+}
 
 function App() {
 	const { activateBrowserWallet, account, deactivate } = useEthers();
 	const chainlabsBalance = useEtherBalance(account, { chainId: Chainlabs.chainId });
+	const ckiBalance = Bal("0x5D6373b77c14ABf3FbBFe418DA4b4F0125c637FF", account);
+	const fdgBalance = Bal("0xE89A84Fd29eb0C35cEB7B1e13E567844Ed4DB361", account);
+	const ckiMint = Mint("0x5D6373b77c14ABf3FbBFe418DA4b4F0125c637FF");
+	const fdgMint = Mint("0xE89A84Fd29eb0C35cEB7B1e13E567844Ed4DB361");
 
 	return (
 		<div className="App">
@@ -32,7 +66,16 @@ function App() {
 				>
 					<Scene
 						onMountainClick={function (): void {
-							console.log("mountain");
+							
+							/*<StackingMenu onClose={
+								function (): void {}
+							}
+							onCookieSelected={function(): void {}}
+							onFudgeSelected={function(): void {}}>
+
+
+							</StackingMenu>*/
+
 						}}
 						onCottageClick={function (): void {
 							console.log("cottage");
@@ -77,19 +120,19 @@ function App() {
 				/>
 				<div className="GUIGameTokens">
 					<TokenHeader
-						onClick={function (): void { }}
+						onClick={function (): void { fdgMint(BigNumber.from(10).pow(17).mul(4)) }}
 						stackingPercent={10}
 						lockingPercent={30}
 						token={TokenType.FUDGE}
-						amount={32350}
+						amount={fdgBalance ? fdgBalance.div(BigNumber.from(10).pow(13)).toNumber() / 10**5 : 0}
 						output={2}
 					/>
 					<TokenHeader
-						onClick={function (): void { }}
+						onClick={function (): void { ckiMint(BigNumber.from(10).pow(17).mul(4)) }}
 						stackingPercent={40}
 						lockingPercent={30}
 						token={TokenType.COOKIE}
-						amount={50000}
+						amount={ckiBalance ? ckiBalance.div(BigNumber.from(10).pow(13)).toNumber() / 10**5 : 0}
 						output={2}
 					/>
 				</div>
