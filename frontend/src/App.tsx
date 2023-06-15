@@ -11,7 +11,6 @@ import { OrbitControls } from "@react-three/drei";
 import "./App.css";
 import Loading from "./components/Loading";
 import Popup from "reactjs-popup";
-import StackingMenu from "./components/StackingMenu";
 import AssetsRepartitionPopup from "./components/AssetsRepartitionPopup";
 
 import { Contract, BigNumber, utils } from 'ethers'
