@@ -17,7 +17,6 @@ import BaseERC20Distr from "./abis/BaseERC20Distr.json";
 import { useEthers, useEtherBalance, useCall, useContractFunction } from '@usedapp/core'
 import { formatEther } from '@ethersproject/units'
 import { Chainlabs } from ".";
-import StackingMenu from "./components/StackingMenu";
 
 function Bal(tokenAddress: string, account: string | undefined): BigNumber | undefined {
 	const { value, error } = useCall(account && {
