@@ -1,7 +1,7 @@
 import {time, loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
 import {ethers} from "hardhat";
-import {BN, randomBN, ETHER} from "../../utils/Numbers";
+import {BN, ETHER} from "../../utils/Numbers";
 
 describe("FdgDistr", function () {
     async function deployEmptyFixture() {
@@ -82,7 +82,7 @@ describe("FdgDistr", function () {
             await fdgDistr.inject(ETHER);
             expect(await erc20.balanceOf(owner.address)).to.equal(startFdg.sub(ETHER));
 
-            await fdgDistr.claim();
+            await fdgDistr.claim(owner.address);
             expect(await erc20.balanceOf(owner.address)).to.equal(startFdg);
         });
 
@@ -107,7 +107,7 @@ describe("FdgDistr", function () {
 
             // Claim of #0
             expect(await erc20.balanceOf(accounts[0].address)).to.be.equal(0);
-            await fdgDistr.connect(accounts[0]).claim();
+            await fdgDistr.claim(accounts[0].address);
             expect(await erc20.balanceOf(accounts[0].address)).to.be.lessThanOrEqual(ETHER.div(8));
             expect(await erc20.balanceOf(accounts[0].address)).to.be.greaterThan(ETHER.div(8).sub(100));
 
@@ -117,7 +117,7 @@ describe("FdgDistr", function () {
 
             // Claim of #1
             expect(await erc20.balanceOf(accounts[1].address)).to.be.equal(0);
-            await fdgDistr.connect(accounts[1]).claim();
+            await fdgDistr.claim(accounts[1].address);
             expect(await erc20.balanceOf(accounts[1].address)).to.be.lessThanOrEqual(ETHER);
             expect(await erc20.balanceOf(accounts[1].address)).to.be.greaterThan(ETHER.sub(100));
 
@@ -126,13 +126,13 @@ describe("FdgDistr", function () {
 
             // Claim of #2
             expect(await erc20.balanceOf(accounts[2].address)).to.be.equal(0);
-            await fdgDistr.connect(accounts[2]).claim();
+            await fdgDistr.claim(accounts[2].address);
             expect(await erc20.balanceOf(accounts[2].address)).to.be.lessThanOrEqual(ETHER.mul(7).div(8));
             expect(await erc20.balanceOf(accounts[2].address)).to.be.greaterThan(ETHER.mul(7).div(8).sub(100));
 
             // Claim of #3
             expect(await erc20.balanceOf(accounts[3].address)).to.be.equal(0);
-            await fdgDistr.connect(accounts[3]).claim();
+            await fdgDistr.claim(accounts[3].address);
             expect(await erc20.balanceOf(accounts[3].address)).to.be.lessThanOrEqual(ETHER);
             expect(await erc20.balanceOf(accounts[3].address)).to.be.greaterThan(ETHER.sub(100));
         });
@@ -152,12 +152,12 @@ describe("FdgDistr", function () {
             await time.increase(defaultPeriod);
 
             expect(await erc20.balanceOf(accounts[0].address)).to.be.equal(0);
-            await fdgDistr.connect(accounts[0]).claim();
+            await fdgDistr.claim(accounts[0].address);
             expect(await erc20.balanceOf(accounts[0].address)).to.be.lessThanOrEqual(ETHER.div(2));
             expect(await erc20.balanceOf(accounts[0].address)).to.be.greaterThan(ETHER.div(2).sub(100));
 
             expect(await erc20.balanceOf(accounts[1].address)).to.be.equal(0);
-            await fdgDistr.connect(accounts[1]).claim();
+            await fdgDistr.claim(accounts[1].address);
             expect(await erc20.balanceOf(accounts[1].address)).to.be.lessThanOrEqual(ETHER.div(2));
             expect(await erc20.balanceOf(accounts[1].address)).to.be.greaterThan(ETHER.div(2).sub(100));
         });
@@ -173,19 +173,19 @@ describe("FdgDistr", function () {
             await time.increase(defaultPeriod / 2 - 1);
 
             expect(await erc20.balanceOf(other.address)).to.be.equal(0);
-            await fdgDistr.connect(other).claim();
+            await fdgDistr.claim(other.address);
             expect(await erc20.balanceOf(other.address)).to.be.lessThanOrEqual(ETHER.div(2));
             expect(await erc20.balanceOf(other.address)).to.be.greaterThan(ETHER.div(2).sub(100));
 
             await time.increase(defaultPeriod / 2 - 1);
 
-            await fdgDistr.connect(other).claim();
+            await fdgDistr.claim(other.address);
             expect(await erc20.balanceOf(other.address)).to.be.lessThanOrEqual(ETHER.mul(3).div(4));
             expect(await erc20.balanceOf(other.address)).to.be.greaterThan(ETHER.mul(3).div(4).sub(100));
 
             await time.increase(defaultPeriod);
 
-            await fdgDistr.connect(other).claim();
+            await fdgDistr.claim(other.address);
             expect(await erc20.balanceOf(other.address)).to.be.lessThanOrEqual(ETHER);
             expect(await erc20.balanceOf(other.address)).to.be.greaterThan(ETHER.sub(100));
         });
@@ -201,7 +201,7 @@ describe("FdgDistr", function () {
             await time.increase(defaultPeriod / 2 - 1);
 
             expect(await erc20.balanceOf(other.address)).to.be.equal(0);
-            await fdgDistr.connect(other).claim();
+            await fdgDistr.claim(other.address);
             expect(await erc20.balanceOf(other.address)).to.be.lessThanOrEqual(ETHER.div(2));
             expect(await erc20.balanceOf(other.address)).to.be.greaterThan(ETHER.div(2).sub(100));
 
@@ -211,14 +211,14 @@ describe("FdgDistr", function () {
 
             await time.increase(defaultPeriod / 2 - 1);
 
-            await fdgDistr.connect(other).claim();
+            await fdgDistr.claim(other.address);
             expect(await erc20.balanceOf(other.address)).to.be.lessThanOrEqual(ETHER.mul(5).div(4).add(1000000000000));
             // Increase tolerance wince injectFlatten distributed a little bit
             expect(await erc20.balanceOf(other.address)).to.be.greaterThan(ETHER.mul(5).div(4));
 
             await time.increase(defaultPeriod);
 
-            await fdgDistr.connect(other).claim();
+            await fdgDistr.claim(other.address);
             expect(await erc20.balanceOf(other.address)).to.be.lessThanOrEqual(ETHER.mul(2));
             expect(await erc20.balanceOf(other.address)).to.be.greaterThan(ETHER.mul(2).sub(100));
         });

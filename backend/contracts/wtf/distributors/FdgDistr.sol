@@ -5,7 +5,6 @@
 pragma solidity ^0.8.18;
 
 import "./BaseERC20Distr.sol";
-import "hardhat/console.sol";
 
 /// @title Wtf's Fudge (FDG) Distributor
 /// @author Chainlabs Switzerland SA
@@ -32,7 +31,7 @@ contract FdgDistr is BaseERC20Distr {
 		flatDistr = FlatDistr(0, uint40(block.timestamp));
 	}
 
-	/// @notice Linearly "flattens" all Fudge (FDG) injections over FLATTEN_PERIOD.
+	/// @notice Injection of Fudge (FDG) over a linear period FLATTEN_PERIOD.
 	/// @dev Requires an ERC20 approval before being called.
 	/// Automatically triggers a flatten distribution.
 	/// @param _amount The amount to inject.
@@ -60,6 +59,7 @@ contract FdgDistr is BaseERC20Distr {
 		uint256 distrBuffer = uint256(flatDistr.distrBuffer);
 		uint256 elapsed = block.timestamp - lastDistr;
 
+		// For optimization purposes
 		if (elapsed == 0 || distrBuffer == 0) return;
 
 		if (elapsed >= FLATTEN_PERIOD) {

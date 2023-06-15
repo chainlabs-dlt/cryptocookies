@@ -11,6 +11,7 @@ jobs:
    steps:
      - name: Checkout
        uses: actions/checkout@v2
+       run: cd frontend
 
      - name: Setup node
        uses: actions/setup-node@v2

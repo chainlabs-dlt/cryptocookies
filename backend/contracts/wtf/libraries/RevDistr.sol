@@ -142,7 +142,6 @@ library RevDistr {
 	) internal returns (uint256 amountClaimed) {
 		amountClaimed = claimable(_userState, _index);
 
-		// Updating claimable balance first unsures the absence of infinite loop
 		_userState.alreadyClaimedTotal = uint128(
 			uint256(_userState.alreadyClaimedTotal) + amountClaimed
 		);
@@ -152,6 +151,7 @@ library RevDistr {
 	/// @param _globalState The lazy global state.
 	/// @param _amount The amount of revenue added.
 	function addRevenue(LazyGlobalState storage _globalState, uint256 _amount) internal {
+		if (_amount == 0) return;
 		_globalState.index = updatedGlobalIndex(_globalState, _amount);
 	}
 }
