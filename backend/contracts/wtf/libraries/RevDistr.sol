@@ -37,7 +37,7 @@ library RevDistr {
 	/// @param _userState The lazy user state.
 	/// @param _updatedGlobalIndex The newest global index.
 	/// @return freshOwn The new updated added revenue.
-	function updatedfreshOwn(
+	function updatedFreshOwn(
 		LazyUserState memory _userState,
 		uint256 _updatedGlobalIndex
 	) internal pure returns (uint256) {
@@ -108,7 +108,7 @@ library RevDistr {
 		if (_change < 0) require(uint256(_change * -1) <= uint256(_userState.ownStake));
 
 		// 1. Updates the user with the new revenue
-		updateLazyUser(_userState, updatedfreshOwn(_userState, _globalState.index));
+		updateLazyUser(_userState, updatedFreshOwn(_userState, _globalState.index));
 
 		//2. Adapts the global state with the new stake change
 		adaptLazyGlobal(_globalState, _change);
@@ -127,7 +127,7 @@ library RevDistr {
 		uint256 _index
 	) internal pure returns (uint256) {
 		uint256 accumulated = uint256(_userState.ownAccumulatedTotal) +
-			updatedfreshOwn(_userState, _index);
+			updatedFreshOwn(_userState, _index);
 
 		return accumulated - uint256(_userState.alreadyClaimedTotal);
 	}
