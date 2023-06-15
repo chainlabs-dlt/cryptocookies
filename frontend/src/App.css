@@ -1,0 +1,26 @@
+.App {
+	height: 100vh;
+	text-align: center;
+}
+
+.GUIAccountHeader {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+	align-items: center;
+	scale: 0.7;
+}
+
+.GUIBoostingFooter {
+	position: fixed;
+	bottom: 0;
+	width: 100vw;
+	display: flex;
+	flex-direction: row;
+	justify-content: space-around;
+	align-items: center;
+}
