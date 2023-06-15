@@ -13,6 +13,7 @@ import Loading from "./components/Loading";
 
 import { Contract, BigNumber, utils } from 'ethers'
 import CKI from "./abis/Cki.json";
+import BaseERC20Distr from "./abis/BaseERC20Distr.json";
 import { useEthers, useEtherBalance, useCall, useContractFunction } from '@usedapp/core'
 import { formatEther } from '@ethersproject/units'
 import { Chainlabs } from ".";
@@ -29,7 +30,7 @@ function Bal(tokenAddress: string, account: string | undefined): BigNumber | und
 	  return undefined
 	}
 	return value?.[0]
- }
+}
 
 function Mint(tokenAddress: string) {
 	const contract = new Contract(tokenAddress, new utils.Interface(CKI))
@@ -44,11 +45,39 @@ function Mint(tokenAddress: string) {
 	}
 }
 
+function UserStake(distrAddress: string, account: string | undefined) {
+	const { value, error } = useCall(account && {
+	  contract: new Contract(distrAddress, new utils.Interface(BaseERC20Distr)),
+	  method: 'usersState',
+	  args: [account]
+	}) ?? {}
+	if(error) {
+	  console.error(error.message)
+	  return undefined
+	}
+	return value;
+}
+
+function GlobalStake(distrAddress: string) {
+	const { value, error } = useCall({
+	  contract: new Contract(distrAddress, new utils.Interface(BaseERC20Distr)),
+	  method: 'globalState',
+	  args: []
+	}) ?? {}
+	if(error) {
+	  console.error(error.message)
+	  return undefined
+	}
+	return value;
+}
+
 function App() {
 	const { activateBrowserWallet, account, deactivate } = useEthers();
 	const chainlabsBalance = useEtherBalance(account, { chainId: Chainlabs.chainId });
 	const ckiBalance = Bal("0x5D6373b77c14ABf3FbBFe418DA4b4F0125c637FF", account);
 	const fdgBalance = Bal("0xE89A84Fd29eb0C35cEB7B1e13E567844Ed4DB361", account);
+	const ckiUserStake = UserStake("0x0a58c62697958311c82F6CA5645fb72aeBCD8522", account);
+	const ckiGlobalStake = GlobalStake("0x0a58c62697958311c82F6CA5645fb72aeBCD8522");
 	const ckiMint = Mint("0x5D6373b77c14ABf3FbBFe418DA4b4F0125c637FF");
 	const fdgMint = Mint("0xE89A84Fd29eb0C35cEB7B1e13E567844Ed4DB361");
 
@@ -66,7 +95,7 @@ function App() {
 				>
 					<Scene
 						onMountainClick={function (): void {
-							console.log("mountain");
+							console.log(ckiGlobalStake);
 						}}
 						onCottageClick={function (): void {
 							console.log("cottage");
@@ -132,7 +161,7 @@ function App() {
 						lockingPercent={30}
 						token={TokenType.COOKIE}
 						amount={ckiBalance ? ckiBalance.div(BigNumber.from(10).pow(13)).toNumber() / 10**5 : 0}
-						output={2}
+						output={ckiUserStake ? ckiUserStake.ownStake.div(BigNumber.from(10).pow(13)).toNumber() / 10**5 : 0}
 					/>
 				</div>
 			</div>
