@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import AccountHeader from "./components/AccountHeader";
 import AssetsHeader from "./components/AssetsHeader";
 import TokenHeader from "./components/TokenHeader";
@@ -10,6 +10,9 @@ import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import "./App.css";
 import Loading from "./components/Loading";
+import Popup from "reactjs-popup";
+import StackingMenu from "./components/StackingMenu";
+import AssetsRepartitionPopup from "./components/AssetsRepartitionPopup";
 
 import { Contract, BigNumber, utils } from 'ethers'
 import CKI from "./abis/Cki.json";
@@ -80,6 +83,18 @@ function App() {
 	const ckiGlobalStake = GlobalStake("0x0a58c62697958311c82F6CA5645fb72aeBCD8522");
 	const ckiMint = Mint("0x5D6373b77c14ABf3FbBFe418DA4b4F0125c637FF");
 	const fdgMint = Mint("0xE89A84Fd29eb0C35cEB7B1e13E567844Ed4DB361");
+	const [openStaking, setOpenStaking] = useState<boolean>(false);
+	const closeStaking = () => setOpenStaking(false);
+	const [openRepartition, setOpenRepartition] = useState<boolean>(false);
+	const closeRepartition = () => setOpenRepartition(false);
+	const [isLocking, setIsLocking] = useState<boolean>(false);
+	const [repartitionToken, setRepartitionToken] = useState<TokenType>(TokenType.COOKIE);
+
+	const openRepartitionPopup = (isLocking: boolean, tokentype: TokenType) => {
+		setIsLocking(isLocking);
+		setRepartitionToken(tokentype);
+		setOpenRepartition((o: boolean): boolean => !o);
+	}
 
 	return (
 		<div className="App">
@@ -99,12 +114,15 @@ function App() {
 						}}
 						onCottageClick={function (): void {
 							console.log("cottage");
+							setOpenStaking((o: boolean): boolean => !o)
 						}}
 						onMineEntranceClick={function (): void {
 							console.log("mine entrance");
+							openRepartitionPopup(true, TokenType.FUDGE);
 						}}
 						onPumpClick={function (): void {
 							console.log("pump");
+							openRepartitionPopup(true, TokenType.COOKIE);
 						}}
 						onAnvilClick={function (): void {
 							console.log("anvil");
@@ -126,7 +144,36 @@ function App() {
 				</Canvas>
 			</Suspense>
 
-			{/* Start of the GUI Part, to complete with what you wish and your business logic*/}
+			{/* Start of the GUI Part */}
+
+
+			<Popup open={openStaking} closeOnDocumentClick onClose={closeStaking}>
+				<StackingMenu
+					onClose={() => { }}
+					onCookieSelected={() => {
+						closeStaking();
+						openRepartitionPopup(false, TokenType.COOKIE);
+					}}
+					onFudgeSelected={() => {
+						closeStaking();
+						openRepartitionPopup(false, TokenType.FUDGE);
+					}}
+				/>
+			</Popup>
+
+			<Popup open={openRepartition} closeOnDocumentClick onClose={closeRepartition}>
+				<AssetsRepartitionPopup
+					amount={130}
+					isLocking={isLocking}
+					lockingPercent={40}
+					onChangeAmount={() => { }}
+					onClose={() => { }}
+					stackingPercent={20}
+					token={repartitionToken}
+				/>
+			</Popup>
+
+
 
 			<div className="GUIAccountHeader">
 				<AccountHeader
@@ -165,6 +212,7 @@ function App() {
 					/>
 				</div>
 			</div>
+
 			<div className="GUIBoostingFooter">
 				<WorldButton onClick={function (): void {}} />
 				<BoostingFooter value={15} maxValue={20} width={300} height={20} />
