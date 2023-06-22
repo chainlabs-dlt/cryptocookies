@@ -4,6 +4,7 @@
 
 import "../wtf/WtfApp.sol";
 import "./CCStaking.sol";
+import "./CCLocking.sol";
 
 pragma solidity ^0.8.18;
 
@@ -11,8 +12,13 @@ pragma solidity ^0.8.18;
 /// @author Chainlabs Switzerland SA
 /// @notice This contract serves as the main point of access of the CryptoCookies environment.
 contract CCCore is WtfApp {
+	uint256 constant HUGE_APPROVAL = 1 << 255;
+
 	CCStaking public immutable FDG_STAKING;
 	CCStaking public immutable CKI_STAKING;
+
+	CCLocking public FDG_LOCKING;
+	CCLocking public CKI_LOCKING;
 
 	// For optimization purposes
 	uint256 fdgLastUpdate;
@@ -22,12 +28,13 @@ contract CCCore is WtfApp {
 	/// @param _fdgDistr Wtf's Fudge (FDG) distribution contract.
 	/// @param _ckiDistr Wtf's Cookie (CKI) distribution contract.
 	constructor(address _fdgDistr, address _ckiDistr) WtfApp(_fdgDistr, _ckiDistr) {
+		// Staking contracts have no expiration dates.
 		FDG_STAKING = new CCStaking(address(this), address(FDG), address(CKI));
 		CKI_STAKING = new CCStaking(address(this), address(CKI), address(FDG));
 
 		// Infinite approval for children contracts.
-		FDG.approve(address(CKI_STAKING), 1 << 255);
-		CKI.approve(address(FDG_STAKING), 1 << 255);
+		FDG.approve(address(CKI_STAKING), HUGE_APPROVAL);
+		CKI.approve(address(FDG_STAKING), HUGE_APPROVAL);
 
 		fdgLastUpdate = block.timestamp;
 		ckiLastUpdate = block.timestamp;
