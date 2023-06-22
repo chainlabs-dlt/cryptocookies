@@ -43,7 +43,6 @@ contract CCStaking is BaseERC20Distr {
 	/// @dev Automatically triggers a CCCore update.
 	/// Called at every claim.
 	function _claimHook() internal override {
-		// Harvest new TOKEN funds from CORE
 		CORE.harvest(address(TOKEN));
 	}
 }

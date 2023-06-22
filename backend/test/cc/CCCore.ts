@@ -82,14 +82,12 @@ describe("CCCore", function () {
             const {fdg, owner, fdgDistr} = await loadFixture(deployEmptyFixture);
 
             expect(await fdgDistr.TOKEN()).to.equal(fdg.address);
-            expect(await fdgDistr.GAUGE()).to.equal(owner.address);
         });
 
         it("Should properly deploy CkiDistr", async function () {
             const {cki, owner, ckiDistr} = await loadFixture(deployEmptyFixture);
 
             expect(await ckiDistr.TOKEN()).to.equal(cki.address);
-            expect(await ckiDistr.GAUGE()).to.equal(owner.address);
         });
 
         it("Should properly deploy CCCore", async function () {
@@ -130,7 +128,7 @@ describe("CCCore", function () {
 
             // CCCore gets some FDG
             await fdg.approve(fdgDistr.address, ETHER);
-            await fdgDistr.appChangeStake(cccore.address, ETHER);
+            await fdgDistr.userChangeStake(cccore.address, ETHER);
             await fdgDistr.inject(ETHER);
 
             // User should receive the FDG
@@ -163,7 +161,7 @@ describe("CCCore", function () {
 
             // CCCore gets some CKI
             await cki.approve(ckiDistr.address, ETHER);
-            await ckiDistr.appChangeStake(cccore.address, ETHER);
+            await ckiDistr.userChangeStake(cccore.address, ETHER);
             await ckiDistr.inject(ETHER);
 
             // User should receive the CKI

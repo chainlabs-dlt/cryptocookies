@@ -4,14 +4,14 @@
 
 pragma solidity ^0.8.18;
 
-import "./BaseERC20Distr.sol";
+import "./ERC20ControlDistr.sol";
 import "../libraries/ABDKMath64x64.sol";
 
 /// @title Wtf's Cookie (CKI) Distributor
 /// @author Chainlabs Switzerland SA
 /// @notice This contract distributes Cookie (CKI) to applications within the Wtf ecosystem.
 /// Concretely, this distributor includes CKI's reverse exponential distribution process.
-contract CkiDistr is BaseERC20Distr {
+contract CkiDistr is ERC20ControlDistr {
 	using ABDKMath64x64 for int128;
 
 	struct InvExpDistr {
@@ -26,7 +26,6 @@ contract CkiDistr is BaseERC20Distr {
 		uint40 lastTrigger;
 	}
 
-	address public immutable GAUGE;
 	int128 public immutable EM_GAMMA;
 
 	InvExpDistr public invExpDistr;
@@ -35,8 +34,7 @@ contract CkiDistr is BaseERC20Distr {
 	/// @param _cki Wtf's Cookie (CKI) ERC20 address.
 	/// @param _gauge The gauge admin of the system.
 	/// @param _emGamma The half-life derived parameter
-	constructor(address _cki, address _gauge, uint256 _emGamma) BaseERC20Distr(_cki) {
-		GAUGE = _gauge;
+	constructor(address _cki, address _gauge, uint256 _emGamma) ERC20ControlDistr(_cki, _gauge) {
 		EM_GAMMA = ABDKMath64x64.fromUInt(_emGamma);
 	}
 
@@ -66,15 +64,6 @@ contract CkiDistr is BaseERC20Distr {
 		// Update lastDist to take into account T0 offset
 		rev = ABDKMath64x64.toUInt(invExpDistr.c.sub(invExpDistr.c.mul(exp)));
 		invExpDistr.lastDistr = uint88(rev);
-	}
-
-	/// @notice Changes the stake of a given app in the distributor.
-	/// Can only be called by Wtf's gauge contract.
-	/// @param _app The target app.
-	/// @param _change The change in stake.
-	function appChangeStake(address _app, int256 _change) external {
-		require(msg.sender == GAUGE);
-		_userChangeStake(_app, _change);
 	}
 
 	function _triggerInvExpDistr() internal {

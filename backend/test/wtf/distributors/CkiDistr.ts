@@ -55,16 +55,16 @@ describe("CkiDistr", function () {
         it("Gauge can change stake", async function () {
             const {ckiDistr, owner} = await loadFixture(deployEmptyFixture);
 
-            await expect(ckiDistr.appChangeStake(owner.address, BN(-1))).to.be.reverted;
-            await expect(ckiDistr.appChangeStake(owner.address, ETHER)).to.be.not.reverted;
-            await expect(ckiDistr.appChangeStake(owner.address, ETHER.mul(-1))).to.be.not.reverted;
-            await expect(ckiDistr.appChangeStake(owner.address, BN(-1))).to.be.reverted;
+            await expect(ckiDistr.userChangeStake(owner.address, BN(-1))).to.be.reverted;
+            await expect(ckiDistr.userChangeStake(owner.address, ETHER)).to.be.not.reverted;
+            await expect(ckiDistr.userChangeStake(owner.address, ETHER.mul(-1))).to.be.not.reverted;
+            await expect(ckiDistr.userChangeStake(owner.address, BN(-1))).to.be.reverted;
         });
 
         it("Random cannot change stake", async function () {
             const {ckiDistr, other} = await loadFixture(deployEmptyFixture);
 
-            await expect(ckiDistr.connect(other).appChangeStake(other.address, ETHER)).to.be.reverted;
+            await expect(ckiDistr.connect(other).userChangeStake(other.address, ETHER)).to.be.reverted;
         });
     });
 
@@ -72,7 +72,7 @@ describe("CkiDistr", function () {
         it("Should require an approval before injection", async function () {
             const {ckiDistr, owner} = await loadFixture(deployEmptyFixture);
 
-            await ckiDistr.appChangeStake(owner.address, ETHER);
+            await ckiDistr.userChangeStake(owner.address, ETHER);
             await expect(ckiDistr.inject(ETHER)).to.be.reverted;
         });
 
@@ -80,7 +80,7 @@ describe("CkiDistr", function () {
             const {erc20, ckiDistr, owner, startCki} = await loadFixture(deployEmptyFixture);
 
             await erc20.approve(ckiDistr.address, ETHER);
-            await ckiDistr.appChangeStake(owner.address, ETHER);
+            await ckiDistr.userChangeStake(owner.address, ETHER);
             await ckiDistr.inject(ETHER);
             expect(await erc20.balanceOf(owner.address)).to.equal(startCki.sub(ETHER));
 
@@ -92,20 +92,20 @@ describe("CkiDistr", function () {
             const {erc20, ckiDistr, accounts} = await loadFixture(deployEmptyFixture);
 
             // 1/8 - 1/4 - 1/8 - 1/2
-            await ckiDistr.appChangeStake(accounts[0].address, ETHER);
-            await ckiDistr.appChangeStake(accounts[1].address, ETHER.mul(2));
-            await ckiDistr.appChangeStake(accounts[2].address, ETHER);
-            await ckiDistr.appChangeStake(accounts[3].address, ETHER.mul(4));
+            await ckiDistr.userChangeStake(accounts[0].address, ETHER);
+            await ckiDistr.userChangeStake(accounts[1].address, ETHER.mul(2));
+            await ckiDistr.userChangeStake(accounts[2].address, ETHER);
+            await ckiDistr.userChangeStake(accounts[3].address, ETHER.mul(4));
 
             // Inject 1 ETHER of FDG
             await erc20.approve(ckiDistr.address, ETHER);
             await ckiDistr.inject(ETHER);
 
             // 0 - 3/8 - 3/8 - 1/4
-            await ckiDistr.appChangeStake(accounts[0].address, ETHER.mul(-1));
-            await ckiDistr.appChangeStake(accounts[1].address, ETHER);
-            await ckiDistr.appChangeStake(accounts[2].address, ETHER.mul(2));
-            await ckiDistr.appChangeStake(accounts[3].address, ETHER.mul(-2));
+            await ckiDistr.userChangeStake(accounts[0].address, ETHER.mul(-1));
+            await ckiDistr.userChangeStake(accounts[1].address, ETHER);
+            await ckiDistr.userChangeStake(accounts[2].address, ETHER.mul(2));
+            await ckiDistr.userChangeStake(accounts[3].address, ETHER.mul(-2));
 
             // Claim of #0
             expect(await erc20.balanceOf(accounts[0].address)).to.be.equal(0);
@@ -124,7 +124,7 @@ describe("CkiDistr", function () {
             expect(await erc20.balanceOf(accounts[1].address)).to.be.greaterThan(ETHER.sub(100));
 
             // This should not change any claimable amounts
-            await ckiDistr.appChangeStake(accounts[2].address, ETHER);
+            await ckiDistr.userChangeStake(accounts[2].address, ETHER);
 
             // Claim of #2
             expect(await erc20.balanceOf(accounts[2].address)).to.be.equal(0);
@@ -145,8 +145,8 @@ describe("CkiDistr", function () {
             const {erc20, ckiDistr, accounts, halfLife} = await loadFixture(deployEmptyFixture);
 
             // 1/2 - 1/2
-            await ckiDistr.appChangeStake(accounts[0].address, ETHER);
-            await ckiDistr.appChangeStake(accounts[1].address, ETHER);
+            await ckiDistr.userChangeStake(accounts[0].address, ETHER);
+            await ckiDistr.userChangeStake(accounts[1].address, ETHER);
             // Should have no effect
             await time.increase(halfLife);
 
@@ -183,7 +183,7 @@ describe("CkiDistr", function () {
             const {erc20, ckiDistr, other, halfLife} = await loadFixture(deployEmptyFixture);
 
             // 1
-            await ckiDistr.appChangeStake(other.address, ETHER);
+            await ckiDistr.userChangeStake(other.address, ETHER);
             // Should have no effect
             await time.increase(halfLife);
 

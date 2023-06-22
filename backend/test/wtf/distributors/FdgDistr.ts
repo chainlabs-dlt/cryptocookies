@@ -53,16 +53,16 @@ describe("FdgDistr", function () {
         it("Gauge can change stake", async function () {
             const {fdgDistr, owner} = await loadFixture(deployEmptyFixture);
 
-            await expect(fdgDistr.appChangeStake(owner.address, BN(-1))).to.be.reverted;
-            await expect(fdgDistr.appChangeStake(owner.address, ETHER)).to.be.not.reverted;
-            await expect(fdgDistr.appChangeStake(owner.address, ETHER.mul(-1))).to.be.not.reverted;
-            await expect(fdgDistr.appChangeStake(owner.address, BN(-1))).to.be.reverted;
+            await expect(fdgDistr.userChangeStake(owner.address, BN(-1))).to.be.reverted;
+            await expect(fdgDistr.userChangeStake(owner.address, ETHER)).to.be.not.reverted;
+            await expect(fdgDistr.userChangeStake(owner.address, ETHER.mul(-1))).to.be.not.reverted;
+            await expect(fdgDistr.userChangeStake(owner.address, BN(-1))).to.be.reverted;
         });
 
         it("Random cannot change stake", async function () {
             const {fdgDistr, other} = await loadFixture(deployEmptyFixture);
 
-            await expect(fdgDistr.connect(other).appChangeStake(other.address, ETHER)).to.be.reverted;
+            await expect(fdgDistr.connect(other).userChangeStake(other.address, ETHER)).to.be.reverted;
         });
     });
 
@@ -70,7 +70,7 @@ describe("FdgDistr", function () {
         it("Should require an approval before injection", async function () {
             const {fdgDistr, owner} = await loadFixture(deployEmptyFixture);
 
-            await fdgDistr.appChangeStake(owner.address, ETHER);
+            await fdgDistr.userChangeStake(owner.address, ETHER);
             await expect(fdgDistr.inject(ETHER)).to.be.reverted;
         });
 
@@ -78,7 +78,7 @@ describe("FdgDistr", function () {
             const {erc20, fdgDistr, owner, startFdg} = await loadFixture(deployEmptyFixture);
 
             await erc20.approve(fdgDistr.address, ETHER);
-            await fdgDistr.appChangeStake(owner.address, ETHER);
+            await fdgDistr.userChangeStake(owner.address, ETHER);
             await fdgDistr.inject(ETHER);
             expect(await erc20.balanceOf(owner.address)).to.equal(startFdg.sub(ETHER));
 
@@ -90,20 +90,20 @@ describe("FdgDistr", function () {
             const {erc20, fdgDistr, accounts} = await loadFixture(deployEmptyFixture);
 
             // 1/8 - 1/4 - 1/8 - 1/2
-            await fdgDistr.appChangeStake(accounts[0].address, ETHER);
-            await fdgDistr.appChangeStake(accounts[1].address, ETHER.mul(2));
-            await fdgDistr.appChangeStake(accounts[2].address, ETHER);
-            await fdgDistr.appChangeStake(accounts[3].address, ETHER.mul(4));
+            await fdgDistr.userChangeStake(accounts[0].address, ETHER);
+            await fdgDistr.userChangeStake(accounts[1].address, ETHER.mul(2));
+            await fdgDistr.userChangeStake(accounts[2].address, ETHER);
+            await fdgDistr.userChangeStake(accounts[3].address, ETHER.mul(4));
 
             // Inject 1 ETHER of FDG
             await erc20.approve(fdgDistr.address, ETHER);
             await fdgDistr.inject(ETHER);
 
             // 0 - 3/8 - 3/8 - 1/4
-            await fdgDistr.appChangeStake(accounts[0].address, ETHER.mul(-1));
-            await fdgDistr.appChangeStake(accounts[1].address, ETHER);
-            await fdgDistr.appChangeStake(accounts[2].address, ETHER.mul(2));
-            await fdgDistr.appChangeStake(accounts[3].address, ETHER.mul(-2));
+            await fdgDistr.userChangeStake(accounts[0].address, ETHER.mul(-1));
+            await fdgDistr.userChangeStake(accounts[1].address, ETHER);
+            await fdgDistr.userChangeStake(accounts[2].address, ETHER.mul(2));
+            await fdgDistr.userChangeStake(accounts[3].address, ETHER.mul(-2));
 
             // Claim of #0
             expect(await erc20.balanceOf(accounts[0].address)).to.be.equal(0);
@@ -122,7 +122,7 @@ describe("FdgDistr", function () {
             expect(await erc20.balanceOf(accounts[1].address)).to.be.greaterThan(ETHER.sub(100));
 
             // This should not change any claimable amounts
-            await fdgDistr.appChangeStake(accounts[2].address, ETHER);
+            await fdgDistr.userChangeStake(accounts[2].address, ETHER);
 
             // Claim of #2
             expect(await erc20.balanceOf(accounts[2].address)).to.be.equal(0);
@@ -143,8 +143,8 @@ describe("FdgDistr", function () {
             const {erc20, fdgDistr, accounts, defaultPeriod} = await loadFixture(deployEmptyFixture);
 
             // 1/2 - 1/2
-            await fdgDistr.appChangeStake(accounts[0].address, ETHER);
-            await fdgDistr.appChangeStake(accounts[1].address, ETHER);
+            await fdgDistr.userChangeStake(accounts[0].address, ETHER);
+            await fdgDistr.userChangeStake(accounts[1].address, ETHER);
 
             await erc20.approve(fdgDistr.address, ETHER);
             await fdgDistr.injectFlatten(ETHER);
@@ -166,7 +166,7 @@ describe("FdgDistr", function () {
             const {erc20, fdgDistr, other, defaultPeriod} = await loadFixture(deployEmptyFixture);
 
             // 1
-            await fdgDistr.appChangeStake(other.address, ETHER);
+            await fdgDistr.userChangeStake(other.address, ETHER);
 
             await erc20.approve(fdgDistr.address, ETHER);
             await fdgDistr.injectFlatten(ETHER);
@@ -194,7 +194,7 @@ describe("FdgDistr", function () {
             const {erc20, fdgDistr, other, defaultPeriod} = await loadFixture(deployEmptyFixture);
 
             // 1
-            await fdgDistr.appChangeStake(other.address, ETHER);
+            await fdgDistr.userChangeStake(other.address, ETHER);
 
             await erc20.approve(fdgDistr.address, ETHER);
             await fdgDistr.injectFlatten(ETHER);

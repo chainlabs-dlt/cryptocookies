@@ -4,7 +4,6 @@
 
 import "../wtf/WtfApp.sol";
 import "./CCStaking.sol";
-import "./CCLocking.sol";
 
 pragma solidity ^0.8.18;
 
@@ -17,9 +16,6 @@ contract CCCore is WtfApp {
 	CCStaking public immutable FDG_STAKING;
 	CCStaking public immutable CKI_STAKING;
 
-	CCLocking public FDG_LOCKING;
-	CCLocking public CKI_LOCKING;
-
 	// For optimization purposes
 	uint256 fdgLastUpdate;
 	uint256 ckiLastUpdate;
@@ -28,7 +24,6 @@ contract CCCore is WtfApp {
 	/// @param _fdgDistr Wtf's Fudge (FDG) distribution contract.
 	/// @param _ckiDistr Wtf's Cookie (CKI) distribution contract.
 	constructor(address _fdgDistr, address _ckiDistr) WtfApp(_fdgDistr, _ckiDistr) {
-		// Staking contracts have no expiration dates.
 		FDG_STAKING = new CCStaking(address(this), address(FDG), address(CKI));
 		CKI_STAKING = new CCStaking(address(this), address(CKI), address(FDG));
 
