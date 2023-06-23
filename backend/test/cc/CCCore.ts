@@ -31,13 +31,13 @@ describe("CCCore", function () {
 
         // Deploy CCCore
         const CCCore = await ethers.getContractFactory("CCCore");
-        const cccore = await CCCore.deploy(fdgDistr.address, ckiDistr.address);
+        const cccore = await CCCore.deploy(fdgDistr.address, ckiDistr.address, owner.address);
 
         // Extract CCStaking
         const CCStaking = await ethers.getContractFactory("CCStaking");
 
-        const ckiStaking = CCStaking.attach(await cccore.CKI_STAKING());
-        const fdgStaking = CCStaking.attach(await cccore.FDG_STAKING());
+        const ckiStaking = CCStaking.attach(await cccore.pools(1));
+        const fdgStaking = CCStaking.attach(await cccore.pools(0));
 
         const accounts = signers.slice(2);
         await cki.devMint(startCki);
@@ -102,8 +102,8 @@ describe("CCCore", function () {
             expect(await cccore.CKI_DISTR()).to.equal(ckiDistr.address);
             expect(await cccore.FDG_DISTR()).to.equal(fdgDistr.address);
 
-            expect(await cccore.CKI_STAKING()).to.equal(ckiStaking.address);
-            expect(await cccore.FDG_STAKING()).to.equal(fdgStaking.address);
+            expect(await cccore.pools(1)).to.equal(ckiStaking.address);
+            expect(await cccore.pools(0)).to.equal(fdgStaking.address);
         });
     });
 
@@ -133,7 +133,7 @@ describe("CCCore", function () {
 
             // User should receive the FDG
             expect(await fdg.balanceOf(owner.address)).to.be.equal(startFdg.sub(ETHER));
-            await ckiStaking.claim(owner.address);
+            await ckiStaking.claim();
             expect(await fdg.balanceOf(owner.address)).to.be.equal(startFdg);
 
             // Unstake the CKI
@@ -166,7 +166,7 @@ describe("CCCore", function () {
 
             // User should receive the CKI
             expect(await cki.balanceOf(owner.address)).to.be.equal(startCki.sub(ETHER));
-            await fdgStaking.claim(owner.address);
+            await fdgStaking.claim();
             expect(await cki.balanceOf(owner.address)).to.be.equal(startCki);
 
             // Unstake the FDG

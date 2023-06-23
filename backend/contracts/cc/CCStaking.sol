@@ -4,6 +4,7 @@
 
 import "./CCCore.sol";
 import "../wtf/distributors/BaseERC20Distr.sol";
+import "../wtf/distributors/ERC20ControlDistr.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 pragma solidity ^0.8.18;
@@ -13,15 +14,21 @@ pragma solidity ^0.8.18;
 /// @notice This contract allows user to (un)stake their TOKEN to generate revenue.
 contract CCStaking is BaseERC20Distr {
 	CCCore public immutable CORE;
+	ERC20ControlDistr public immutable BRIDGE;
 	IERC20 public immutable STAKED_TOKEN;
 
 	/// @notice Constructs a CCStaking contract.
 	/// @param _core CryptoCookies' core contract.
 	/// @param _stakedToken The staked token.
-	/// @param _revToken The revenue token.
-	constructor(address _core, address _stakedToken, address _revToken) BaseERC20Distr(_revToken) {
+	/// @param _bridge The bridge contract from which to receive revenue.
+	constructor(
+		address _core,
+		address _stakedToken,
+		address _bridge
+	) BaseERC20Distr(address(ERC20ControlDistr(_bridge).TOKEN())) {
 		CORE = CCCore(_core);
 		STAKED_TOKEN = IERC20(_stakedToken);
+		BRIDGE = ERC20ControlDistr(_bridge);
 	}
 
 	/// @notice Adds stake for the caller in the distributor.
@@ -40,9 +47,11 @@ contract CCStaking is BaseERC20Distr {
 		STAKED_TOKEN.transfer(msg.sender, _amount);
 	}
 
-	/// @dev Automatically triggers a CCCore update.
-	/// Called at every claim.
+	/// @dev Automatically triggers a CCCore update, followed by a bridge claim.
+	/// Called at every user claim.
 	function _claimHook() internal override {
-		CORE.harvest(address(TOKEN));
+		CORE.update(address(this));
+		// Low-level call for optimization purposes (avoid self-approval).
+		RevDistr.addRevenue(globalState, BRIDGE.claim());
 	}
 }

@@ -84,7 +84,7 @@ describe("CkiDistr", function () {
             await ckiDistr.inject(ETHER);
             expect(await erc20.balanceOf(owner.address)).to.equal(startCki.sub(ETHER));
 
-            await ckiDistr.claim(owner.address);
+            await ckiDistr.claim();
             expect(await erc20.balanceOf(owner.address)).to.equal(startCki);
         });
 
@@ -109,7 +109,7 @@ describe("CkiDistr", function () {
 
             // Claim of #0
             expect(await erc20.balanceOf(accounts[0].address)).to.be.equal(0);
-            await ckiDistr.claim(accounts[0].address);
+            await ckiDistr.connect(accounts[0]).claim();
             expect(await erc20.balanceOf(accounts[0].address)).to.be.lessThanOrEqual(ETHER.div(8));
             expect(await erc20.balanceOf(accounts[0].address)).to.be.greaterThan(ETHER.div(8).sub(100));
 
@@ -119,7 +119,7 @@ describe("CkiDistr", function () {
 
             // Claim of #1
             expect(await erc20.balanceOf(accounts[1].address)).to.be.equal(0);
-            await ckiDistr.claim(accounts[1].address);
+            await ckiDistr.connect(accounts[1]).claim();
             expect(await erc20.balanceOf(accounts[1].address)).to.be.lessThanOrEqual(ETHER);
             expect(await erc20.balanceOf(accounts[1].address)).to.be.greaterThan(ETHER.sub(100));
 
@@ -128,13 +128,13 @@ describe("CkiDistr", function () {
 
             // Claim of #2
             expect(await erc20.balanceOf(accounts[2].address)).to.be.equal(0);
-            await ckiDistr.claim(accounts[2].address);
+            await ckiDistr.connect(accounts[2]).claim();
             expect(await erc20.balanceOf(accounts[2].address)).to.be.lessThanOrEqual(ETHER.mul(7).div(8));
             expect(await erc20.balanceOf(accounts[2].address)).to.be.greaterThan(ETHER.mul(7).div(8).sub(100));
 
             // Claim of #3
             expect(await erc20.balanceOf(accounts[3].address)).to.be.equal(0);
-            await ckiDistr.claim(accounts[3].address);
+            await ckiDistr.connect(accounts[3]).claim();
             expect(await erc20.balanceOf(accounts[3].address)).to.be.lessThanOrEqual(ETHER);
             expect(await erc20.balanceOf(accounts[3].address)).to.be.greaterThan(ETHER.sub(100));
         });
@@ -159,22 +159,22 @@ describe("CkiDistr", function () {
             await time.increase(halfLife);
 
             expect(await erc20.balanceOf(accounts[0].address)).to.be.equal(0);
-            await ckiDistr.claim(accounts[0].address);
+            await ckiDistr.connect(accounts[0]).claim();
             expect(await erc20.balanceOf(accounts[0].address)).to.be.lessThanOrEqual(injected.div(4));
             expect(await erc20.balanceOf(accounts[0].address)).to.be.greaterThan(injected.div(4).sub(100));
 
             expect(await erc20.balanceOf(accounts[1].address)).to.be.equal(0);
-            await ckiDistr.claim(accounts[1].address);
+            await ckiDistr.connect(accounts[1]).claim();
             expect(await erc20.balanceOf(accounts[1].address)).to.be.lessThanOrEqual(injected.div(4));
             expect(await erc20.balanceOf(accounts[1].address)).to.be.greaterThan(injected.div(4).sub(100));
 
             await time.increase(halfLife);
 
-            await ckiDistr.claim(accounts[0].address);
+            await ckiDistr.connect(accounts[0]).claim();
             expect(await erc20.balanceOf(accounts[0].address)).to.be.lessThanOrEqual(injected.div(8).mul(3));
             expect(await erc20.balanceOf(accounts[0].address)).to.be.greaterThan(injected.div(8).mul(3).sub(100));
 
-            await ckiDistr.claim(accounts[1].address);
+            await ckiDistr.connect(accounts[1]).claim();
             expect(await erc20.balanceOf(accounts[1].address)).to.be.lessThanOrEqual(injected.div(8).mul(3));
             expect(await erc20.balanceOf(accounts[1].address)).to.be.greaterThan(injected.div(8).mul(3).sub(100));
         });
@@ -196,7 +196,7 @@ describe("CkiDistr", function () {
             await time.increase(halfLife);
 
             expect(await erc20.balanceOf(other.address)).to.be.equal(0);
-            await ckiDistr.claim(other.address);
+            await ckiDistr.connect(other).claim();
             expect(await erc20.balanceOf(other.address)).to.be.lessThanOrEqual(injected0.div(2));
             expect(await erc20.balanceOf(other.address)).to.be.greaterThan(injected0.div(2).sub(100));
 
@@ -208,7 +208,7 @@ describe("CkiDistr", function () {
 
             await time.increase(halfLife);
 
-            await ckiDistr.claim(other.address);
+            await ckiDistr.connect(other).claim();
             expect(await erc20.balanceOf(other.address)).to.be.lessThanOrEqual(injected0.div(4).mul(3).add(injected1.div(2)));
             expect(await erc20.balanceOf(other.address)).to.be.greaterThan(injected0.div(4).mul(3).add(injected1.div(2)).sub(100));
         });

@@ -37,16 +37,15 @@ contract BaseERC20Distr {
 		RevDistr.addRevenue(globalState, _amount);
 	}
 
-	/// @notice Claims a user's pending balance.
-	/// The user will be credited with the newly acquired ERC20 tokens.
+	/// @notice Claims a msg.sender's pending balance.
+	/// msg.sender will be credited with the newly acquired ERC20 tokens.
 	/// @dev This function calls the _claimHook() hook before executing a claim.
-	/// @param _user The user to execute a claim for.
 	/// @return amountClaimed The amount that has been claimed.
-	function claim(address _user) external returns (uint256 amountClaimed) {
+	function claim() external returns (uint256 amountClaimed) {
 		_claimHook();
 
-		amountClaimed = RevDistr.claim(usersState[_user], globalState.index);
-		require(TOKEN.transfer(_user, amountClaimed));
+		amountClaimed = RevDistr.claim(usersState[msg.sender], globalState.index);
+		require(TOKEN.transfer(msg.sender, amountClaimed));
 	}
 
 	/// @dev Changes the stake of a given user in the distributor.
