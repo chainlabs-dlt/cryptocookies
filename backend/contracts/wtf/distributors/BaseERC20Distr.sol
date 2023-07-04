@@ -9,10 +9,10 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /// @title A Basic ERC20 Distributor
 /// @author Chainlabs Switzerland SA
-/// @notice This contract provides boilerplate code for a primitive ERC20 distributor.
+/// @notice This abstract contract provides boilerplate code for a primitive ERC20 distributor.
 /// @dev By default, injections are immediate, but a more fine-grained implementation can
 /// be achieved by redefining the _claimHook() function.
-contract BaseERC20Distr {
+abstract contract BaseERC20Distr {
 	IERC20 public immutable TOKEN;
 
 	RevDistr.LazyGlobalState public globalState;
@@ -34,7 +34,7 @@ contract BaseERC20Distr {
 	function inject(uint256 _amount) external {
 		require(TOKEN.transferFrom(msg.sender, address(this), _amount));
 
-		RevDistr.addRevenue(globalState, _amount);
+		_addRevenue(_amount);
 	}
 
 	/// @notice Claims a msg.sender's pending balance.
@@ -46,6 +46,14 @@ contract BaseERC20Distr {
 
 		amountClaimed = RevDistr.claim(usersState[msg.sender], globalState.index);
 		require(TOKEN.transfer(msg.sender, amountClaimed));
+	}
+
+	/// @dev Adds revenue to be distributed.
+	/// This function performs no security checks so its visibility
+	/// should remain internal.
+	/// @param _amount The amount to add.
+	function _addRevenue(uint256 _amount) internal {
+		RevDistr.addRevenue(globalState, _amount);
 	}
 
 	/// @dev Changes the stake of a given user in the distributor.

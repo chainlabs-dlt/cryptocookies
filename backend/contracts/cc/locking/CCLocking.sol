@@ -2,10 +2,8 @@
 /// Copyright © 2023 Chainlabs Switzerland SA
 /// All Rights Reserved
 
-import "./CCCore.sol";
-import "./CCStaking.sol";
-import "../wtf/distributors/BaseERC20Distr.sol";
-import "./locking/ERC20Mintable.sol";
+import "../CCStaking.sol";
+import "./ERC20Mintable.sol";
 
 pragma solidity ^0.8.18;
 
@@ -29,25 +27,22 @@ contract CCLocking is CCStaking {
 	uint256 public immutable PERIOD_END;
 
 	/// @notice Constructs a CCLocking contract.
-	/// @param _core CryptoCookies' core contract.
 	/// @param _lockedToken The locked token.
-	/// @param _revToken The revenue token.
-	/// @param _periodDuration How long the contract obtains revenue from the core.
+	/// @param _bridge The bridge contract from which to receive revenue.
+	/// @param _periodDuration The period duration.
 	constructor(
-		address _core,
 		address _lockedToken,
-		address _revToken,
+		address _bridge,
 		uint256 _periodDuration
 	)
 		CCStaking(
-			_core,
 			address(
 				new ERC20Mintable(
 					string.concat("Yield", " ", ERC20(_lockedToken).name()),
 					string.concat("y", ERC20(_lockedToken).symbol())
 				)
 			),
-			_revToken
+			_bridge
 		)
 	{
 		LOCKED_TOKEN = ERC20(_lockedToken);
@@ -75,7 +70,7 @@ contract CCLocking is CCStaking {
 
 	/// @notice Unlocks a given amount of TOKEN by providing the equivalent amount
 	/// of cTKN (and yTKN if the period has not yet ended).
-	/// Requires a prior ERC20 token approval.
+	/// Requires prior ERC20 token approvals.
 	/// @param _amount The amount to lock.
 	function unlock(uint256 _amount) external {
 		require(CAPITAL_TOKEN.transferFrom(msg.sender, address(this), _amount));
