@@ -2,7 +2,7 @@
 /// Copyright © 2023 Chainlabs Switzerland SA
 /// All Rights Reserved
 
-import "../CCStaking.sol";
+import "../staking/CCStaking.sol";
 import "./ERC20Mintable.sol";
 
 pragma solidity ^0.8.18;

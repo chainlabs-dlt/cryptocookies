@@ -4,7 +4,7 @@
 
 pragma solidity ^0.8.18;
 
-import "./ERC20ControlDistr.sol";
+import "./erc20/ERC20ControlDistr.sol";
 
 /// @title Wtf's Fudge (FDG) Distributor
 /// @author Chainlabs Switzerland SA

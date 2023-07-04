@@ -4,7 +4,7 @@
 
 pragma solidity ^0.8.18;
 
-import "../libraries/RevDistr.sol";
+import "../../libraries/RevDistr.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /// @title A Basic ERC20 Distributor

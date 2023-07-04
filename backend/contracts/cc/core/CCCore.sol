@@ -2,10 +2,8 @@
 /// Copyright © 2023 Chainlabs Switzerland SA
 /// All Rights Reserved
 
-import "../wtf/WtfApp.sol";
-import "../wtf/distributors/ERC20ControlBridge.sol";
-import "./CCStaking.sol";
-import "./locking/CCLocking.sol";
+import "../../wtf/apps/WtfApp.sol";
+import "../../wtf/distributors/erc20/ERC20ControlBridge.sol";
 
 pragma solidity ^0.8.18;
 

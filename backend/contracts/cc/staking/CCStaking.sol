@@ -2,9 +2,7 @@
 /// Copyright © 2023 Chainlabs Switzerland SA
 /// All Rights Reserved
 
-import "../wtf/distributors/BaseERC20Distr.sol";
-import "../wtf/distributors/ERC20ControlDistr.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "../../wtf/distributors/erc20/ERC20ControlBridge.sol";
 
 pragma solidity ^0.8.18;
 
@@ -12,7 +10,7 @@ pragma solidity ^0.8.18;
 /// @author Chainlabs Switzerland SA
 /// @notice This contract allows users to (un)stake their TOKEN to generate revenue.
 contract CCStaking is BaseERC20Distr {
-	ERC20ControlDistr public immutable BRIDGE;
+	ERC20ControlBridge public immutable BRIDGE;
 	IERC20 public immutable STAKED_TOKEN;
 
 	/// @notice Constructs a CCStaking contract.
@@ -21,9 +19,9 @@ contract CCStaking is BaseERC20Distr {
 	constructor(
 		address _stakedToken,
 		address _bridge
-	) BaseERC20Distr(address(ERC20ControlDistr(_bridge).TOKEN())) {
+	) BaseERC20Distr(address(ERC20ControlBridge(_bridge).TOKEN())) {
 		STAKED_TOKEN = IERC20(_stakedToken);
-		BRIDGE = ERC20ControlDistr(_bridge);
+		BRIDGE = ERC20ControlBridge(_bridge);
 	}
 
 	/// @notice Adds stake for the caller in the distributor.
