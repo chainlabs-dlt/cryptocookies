@@ -41,7 +41,7 @@ abstract contract BaseERC20Distr {
 	/// msg.sender will be credited with the newly acquired ERC20 tokens.
 	/// @dev This function calls the _claimHook() hook before executing a claim.
 	/// @return amountClaimed The amount that has been claimed.
-	function claim() external returns (uint256 amountClaimed) {
+	function claim() external virtual returns (uint256 amountClaimed) {
 		_claimHook();
 
 		amountClaimed = RevDistr.claim(usersState[msg.sender], globalState.index);

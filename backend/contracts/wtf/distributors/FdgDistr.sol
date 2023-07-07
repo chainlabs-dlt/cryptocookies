@@ -11,6 +11,9 @@ import "./erc20/ERC20ControlDistr.sol";
 /// @notice This contract distributes Fudge (FDG) to applications within the Wtf ecosystem.
 /// Concretely, this distributor linearly "flattens" all Fudge (FDG) injections over FLATTEN_PERIOD.
 /// The stakes may only be updated by the gauge contract.
+/// IMPORTANT: Every claim or injectFlatten will automatically "reflatten" the potential remaining 
+/// buffer over FLATTEN_PERIOD again. As such, even if we suppose infinite claims over FLATTEN_PERIOD,
+/// at least (e - 1)/e (i.e. ~63%) of the remaining buffer will be distributed every FLATTEN_PERIOD.
 contract FdgDistr is ERC20ControlDistr {
 	struct FlatDistr {
 		uint128 distrBuffer;

@@ -1,7 +1,7 @@
 import {time, loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
 import {ethers} from "hardhat";
-import {ETHER} from "../utils/Numbers";
+import {ETHER} from "../../utils/Numbers";
 
 describe("CCCore", function () {
     async function deployEmptyFixture() {
@@ -33,11 +33,14 @@ describe("CCCore", function () {
         const CCCore = await ethers.getContractFactory("CCCore");
         const cccore = await CCCore.deploy(fdgDistr.address, ckiDistr.address, owner.address);
 
-        // Extract CCStaking
-        const CCStaking = await ethers.getContractFactory("CCStaking");
+        // Distributors should only fuel CCCore
+        await ckiDistr.userChangeStake(cccore.address, ETHER);
+        await fdgDistr.userChangeStake(cccore.address, ETHER);
 
-        const ckiStaking = CCStaking.attach(await cccore.pools(1));
-        const fdgStaking = CCStaking.attach(await cccore.pools(0));
+        // Extract bridges
+        const Bridge = await ethers.getContractFactory("ERC20ControlBridge")
+        const fdgBridge = Bridge.attach(await cccore.FDG_BRIDGE());
+        const ckiBridge = Bridge.attach(await cccore.CKI_BRIDGE());
 
         const accounts = signers.slice(2);
         await cki.devMint(startCki);
@@ -55,9 +58,9 @@ describe("CCCore", function () {
             startCki,
             startFdg,
             halfLife,
-            ckiStaking,
-            fdgStaking,
-            cccore
+            cccore,
+            fdgBridge,
+            ckiBridge
         };
     }
 
@@ -79,15 +82,19 @@ describe("CCCore", function () {
         });
 
         it("Should properly deploy FdgDistr", async function () {
-            const {fdg, owner, fdgDistr} = await loadFixture(deployEmptyFixture);
+            const {fdg, fdgDistr, cccore} = await loadFixture(deployEmptyFixture);
 
             expect(await fdgDistr.TOKEN()).to.equal(fdg.address);
+            expect((await fdgDistr.usersState(cccore.address)).ownStake).to.be.equal(ETHER);
+            expect((await fdgDistr.globalState()).totalStake).to.be.equal(ETHER);
         });
 
         it("Should properly deploy CkiDistr", async function () {
-            const {cki, owner, ckiDistr} = await loadFixture(deployEmptyFixture);
+            const {cki, ckiDistr, cccore} = await loadFixture(deployEmptyFixture);
 
             expect(await ckiDistr.TOKEN()).to.equal(cki.address);
+            expect((await ckiDistr.usersState(cccore.address)).ownStake).to.be.equal(ETHER);
+            expect((await ckiDistr.globalState()).totalStake).to.be.equal(ETHER);
         });
 
         it("Should properly deploy CCCore", async function () {
@@ -95,19 +102,59 @@ describe("CCCore", function () {
                 cccore,
                 ckiDistr,
                 fdgDistr,
-                ckiStaking,
-                fdgStaking
+                ckiBridge,
+                fdgBridge
             } = await loadFixture(deployEmptyFixture);
 
             expect(await cccore.CKI_DISTR()).to.equal(ckiDistr.address);
             expect(await cccore.FDG_DISTR()).to.equal(fdgDistr.address);
 
-            expect(await cccore.pools(1)).to.equal(ckiStaking.address);
-            expect(await cccore.pools(0)).to.equal(fdgStaking.address);
+            expect(await cccore.CKI_BRIDGE()).to.equal(ckiBridge.address);
+            expect(await cccore.FDG_BRIDGE()).to.equal(fdgBridge.address);
+        });
+
+        it("Should properly deploy bridges (owner is admin)", async function () {
+            const {owner, ckiBridge, fdgBridge} = await loadFixture(deployEmptyFixture);
+
+            expect(await ckiBridge.hasRole(await ckiBridge.DEFAULT_ADMIN_ROLE(), owner.address)).to.equal(true);
+            expect(await fdgBridge.hasRole(await ckiBridge.DEFAULT_ADMIN_ROLE(), owner.address)).to.equal(true);
         });
     });
 
-    describe("Check Staking & Unstaking", function () {
+    describe("Check Bridges Functionality", function () {
+        it("Only bridges can call claim", async function () {
+            const {cccore} = await loadFixture(deployEmptyFixture);
+            await expect(cccore.claim()).to.be.reverted;
+        });
+
+        async function redirect(tkn: any, tknBridge: any, other: any, tknDistr: any) {
+            // Redirect tkn to other
+            expect(await tkn.balanceOf(other.address)).to.be.equal(0);
+            await tknBridge.userChangeStake(other.address, ETHER);
+            
+            // Fuel the original tknDistr contract
+            expect(await tkn.balanceOf(other.address)).to.be.equal(0);
+            await tkn.approve(tknDistr.address, ETHER);
+            await tknDistr.inject(ETHER);
+            
+            // Other claim
+            await tknBridge.connect(other).claim()
+            expect(await tkn.balanceOf(other.address)).to.be.equal(ETHER);
+        }
+
+        it("CCCore redirects Fdg to bridge", async function () {
+            const {fdg, fdgBridge, other, fdgDistr} = await loadFixture(deployEmptyFixture);
+            await redirect(fdg, fdgBridge, other, fdgDistr);
+        });
+
+        it("CCCore redirects Cki to bridge", async function () {
+            const {cki, ckiBridge, other, ckiDistr} = await loadFixture(deployEmptyFixture);
+            await redirect(cki, ckiBridge, other, ckiDistr);
+        });
+    });
+    
+    // TODO: To relocate for staking!
+    /*describe("Check Staking & Unstaking", function () {
         it("Should allow to stake FDG, earn CKI, and unstake FDG", async function () {
             const {
                 owner,
@@ -230,5 +277,5 @@ describe("CCCore", function () {
             await fdgStaking.unstake(ETHER);
             await expect(fdgStaking.unstake(ETHER.add(1))).to.be.reverted;
         });
-    });
+    });*/
 });
