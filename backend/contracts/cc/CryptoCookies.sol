@@ -8,7 +8,7 @@ pragma solidity ^0.8.18;
 
 /// @title CryptoCookies
 /// @author Chainlabs Switzerland SA
-/// @notice
+/// @notice TODO: WIP
 contract CryptoCookies {
 	// Upgradable? isDAO (heritance)
 	// CCCore public immutable CORE;

@@ -2,36 +2,30 @@ import {time, loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
 import {ethers} from "hardhat";
 import {BN, ETHER} from "../../utils/Numbers";
+import {deployTokens, deployRevDistrs, HALF_LIFE} from "../../../scripts/units-deploy";
 
 describe("CkiDistr", function () {
     async function deployEmptyFixture() {
-        const deployTime = await time.latest();
-        const defaultGamma = 2105 * 60 * 60 * 24; // 4y half-life
-        const halfLife = 4 * 365 * 24 * 60 * 60 - 79750;
-        const startCki = ETHER.mul(1000000000000); // One billion
-
         const signers = await ethers.getSigners();
         const [owner, other] = signers;
 
-        const CKI = await ethers.getContractFactory("Cki");
-        const cki = await CKI.deploy();
+        // Deploy cki and ckiDistr
+        const {cki, fdg} = await deployTokens();
+        const {ckiDistr} = await deployRevDistrs(cki, fdg, owner);
 
-        const CkiDistr = await ethers.getContractFactory("CkiDistr");
-        const ckiDistr = await CkiDistr.deploy(cki.address, owner.address, defaultGamma);
+        // Initial dev mint for owner (1B)
+        const startCki = ETHER.mul(1000000000000);
+        await cki.devMint(startCki);
 
         const accounts = signers.slice(2);
-        await cki.devMint(startCki);
 
         return {
             cki,
             ckiDistr,
-            deployTime,
             owner,
             other,
             accounts,
-            startCki,
-            defaultGamma,
-            halfLife
+            startCki
         };
     }
 
@@ -142,13 +136,13 @@ describe("CkiDistr", function () {
 
     describe("Check Inverse Exponential Injection", function () {
         it("Should distribute half after half-life period", async function () {
-            const {cki, ckiDistr, accounts, halfLife} = await loadFixture(deployEmptyFixture);
+            const {cki, ckiDistr, accounts} = await loadFixture(deployEmptyFixture);
 
             // 1/2 - 1/2
             await ckiDistr.userChangeStake(accounts[0].address, ETHER);
             await ckiDistr.userChangeStake(accounts[1].address, ETHER);
             // Should have no effect
-            await time.increase(halfLife);
+            await time.increase(HALF_LIFE);
 
             // Inject 1000 CKI
             // Cannot be too small due to rounding errors
@@ -156,7 +150,7 @@ describe("CkiDistr", function () {
             await cki.approve(ckiDistr.address, injected);
             await ckiDistr.injectInvExp(1000);
 
-            await time.increase(halfLife);
+            await time.increase(HALF_LIFE);
 
             expect(await cki.balanceOf(accounts[0].address)).to.be.equal(0);
             await ckiDistr.connect(accounts[0]).claim();
@@ -168,7 +162,7 @@ describe("CkiDistr", function () {
             expect(await cki.balanceOf(accounts[1].address)).to.be.lessThanOrEqual(injected.div(4));
             expect(await cki.balanceOf(accounts[1].address)).to.be.greaterThan(injected.div(4).sub(100));
 
-            await time.increase(halfLife);
+            await time.increase(HALF_LIFE);
 
             await ckiDistr.connect(accounts[0]).claim();
             expect(await cki.balanceOf(accounts[0].address)).to.be.lessThanOrEqual(injected.div(8).mul(3));
@@ -180,12 +174,12 @@ describe("CkiDistr", function () {
         });
 
         it("Should distribute half after half-life period when multiple injections", async function () {
-            const {cki, ckiDistr, other, halfLife} = await loadFixture(deployEmptyFixture);
+            const {cki, ckiDistr, other} = await loadFixture(deployEmptyFixture);
 
             // 1
             await ckiDistr.userChangeStake(other.address, ETHER);
             // Should have no effect
-            await time.increase(halfLife);
+            await time.increase(HALF_LIFE);
 
             // Inject 1000 CKI
             // Cannot be too small due to rounding errors
@@ -193,7 +187,7 @@ describe("CkiDistr", function () {
             await cki.approve(ckiDistr.address, injected0);
             await ckiDistr.injectInvExp(1000);
 
-            await time.increase(halfLife);
+            await time.increase(HALF_LIFE);
 
             expect(await cki.balanceOf(other.address)).to.be.equal(0);
             await ckiDistr.connect(other).claim();
@@ -206,7 +200,7 @@ describe("CkiDistr", function () {
             await cki.approve(ckiDistr.address, injected1);
             await ckiDistr.injectInvExp(2000);
 
-            await time.increase(halfLife);
+            await time.increase(HALF_LIFE);
 
             await ckiDistr.connect(other).claim();
             expect(await cki.balanceOf(other.address)).to.be.lessThanOrEqual(injected0.div(4).mul(3).add(injected1.div(2)));

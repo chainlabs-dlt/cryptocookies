@@ -2,34 +2,30 @@ import {time, loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
 import {ethers} from "hardhat";
 import {BN, ETHER} from "../../utils/Numbers";
+import {deployTokens, deployRevDistrs, DEFAULT_PERIOD} from "../../../scripts/units-deploy";
 
 describe("FdgDistr", function () {
     async function deployEmptyFixture() {
-        const deployTime = await time.latest();
-        const defaultPeriod = 60 * 60 * 24 * 7; // One week
-        const startFdg = ETHER.mul(1000000000000); // One billion
-
         const signers = await ethers.getSigners();
         const [owner, other] = signers;
 
-        const FDG = await ethers.getContractFactory("Fdg");
-        const fdg = await FDG.deploy();
+        // Deploy fdg and fdgDistr
+        const {cki, fdg} = await deployTokens();
+        const {fdgDistr} = await deployRevDistrs(cki, fdg, owner);
 
-        const FdgDistr = await ethers.getContractFactory("FdgDistr");
-        const fdgDistr = await FdgDistr.deploy(fdg.address, owner.address, defaultPeriod);
+        // Initial dev mint for owner (1B)
+        const startFdg = ETHER.mul(1000000000000);
+        await fdg.devMint(startFdg);
 
         const accounts = signers.slice(2);
-        await fdg.devMint(startFdg);
 
         return {
             fdg,
             fdgDistr,
-            deployTime,
             owner,
             other,
             accounts,
-            startFdg,
-            defaultPeriod
+            startFdg
         };
     }
 
@@ -140,7 +136,7 @@ describe("FdgDistr", function () {
 
     describe("Check Flatten Injection", function () {
         it("Should distribute all after whole period", async function () {
-            const {fdg, fdgDistr, accounts, defaultPeriod} = await loadFixture(deployEmptyFixture);
+            const {fdg, fdgDistr, accounts} = await loadFixture(deployEmptyFixture);
 
             // 1/2 - 1/2
             await fdgDistr.userChangeStake(accounts[0].address, ETHER);
@@ -149,7 +145,7 @@ describe("FdgDistr", function () {
             await fdg.approve(fdgDistr.address, ETHER);
             await fdgDistr.injectFlatten(ETHER);
 
-            await time.increase(defaultPeriod);
+            await time.increase(DEFAULT_PERIOD);
 
             expect(await fdg.balanceOf(accounts[0].address)).to.be.equal(0);
             await fdgDistr.connect(accounts[0]).claim();
@@ -163,27 +159,27 @@ describe("FdgDistr", function () {
         });
 
         it("Should distribute progressively", async function () {
-            const {fdg, fdgDistr, other, defaultPeriod} = await loadFixture(deployEmptyFixture);
+            const {fdg, fdgDistr, other} = await loadFixture(deployEmptyFixture);
 
             // 1
             await fdgDistr.userChangeStake(other.address, ETHER);
 
             await fdg.approve(fdgDistr.address, ETHER);
             await fdgDistr.injectFlatten(ETHER);
-            await time.increase(defaultPeriod / 2 - 1);
+            await time.increase(DEFAULT_PERIOD / 2 - 1);
 
             expect(await fdg.balanceOf(other.address)).to.be.equal(0);
             await fdgDistr.connect(other).claim();
             expect(await fdg.balanceOf(other.address)).to.be.lessThanOrEqual(ETHER.div(2));
             expect(await fdg.balanceOf(other.address)).to.be.greaterThan(ETHER.div(2).sub(100));
 
-            await time.increase(defaultPeriod / 2 - 1);
+            await time.increase(DEFAULT_PERIOD / 2 - 1);
 
             await fdgDistr.connect(other).claim();
             expect(await fdg.balanceOf(other.address)).to.be.lessThanOrEqual(ETHER.mul(3).div(4));
             expect(await fdg.balanceOf(other.address)).to.be.greaterThan(ETHER.mul(3).div(4).sub(100));
 
-            await time.increase(defaultPeriod);
+            await time.increase(DEFAULT_PERIOD);
 
             await fdgDistr.connect(other).claim();
             expect(await fdg.balanceOf(other.address)).to.be.lessThanOrEqual(ETHER);
@@ -191,14 +187,14 @@ describe("FdgDistr", function () {
         });
 
         it("Should distribute progressively when injecting multiple times", async function () {
-            const {fdg, fdgDistr, other, defaultPeriod} = await loadFixture(deployEmptyFixture);
+            const {fdg, fdgDistr, other} = await loadFixture(deployEmptyFixture);
 
             // 1
             await fdgDistr.userChangeStake(other.address, ETHER);
 
             await fdg.approve(fdgDistr.address, ETHER);
             await fdgDistr.injectFlatten(ETHER);
-            await time.increase(defaultPeriod / 2 - 1);
+            await time.increase(DEFAULT_PERIOD / 2 - 1);
 
             expect(await fdg.balanceOf(other.address)).to.be.equal(0);
             await fdgDistr.connect(other).claim();
@@ -209,14 +205,14 @@ describe("FdgDistr", function () {
             // This distributes a little bit, so we have to take that into account in the check
             await fdgDistr.injectFlatten(ETHER);
 
-            await time.increase(defaultPeriod / 2 - 1);
+            await time.increase(DEFAULT_PERIOD / 2 - 1);
 
             await fdgDistr.connect(other).claim();
             expect(await fdg.balanceOf(other.address)).to.be.lessThanOrEqual(ETHER.mul(5).div(4).add(1000000000000));
             // Increase tolerance since injectFlatten distributed a little bit
             expect(await fdg.balanceOf(other.address)).to.be.greaterThan(ETHER.mul(5).div(4));
 
-            await time.increase(defaultPeriod);
+            await time.increase(DEFAULT_PERIOD);
 
             await fdgDistr.connect(other).claim();
             expect(await fdg.balanceOf(other.address)).to.be.lessThanOrEqual(ETHER.mul(2));
