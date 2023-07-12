@@ -13,12 +13,9 @@ import Loading from "./components/Loading";
 import Popup from "reactjs-popup";
 import AssetsRepartitionPopup from "./components/AssetsRepartitionPopup";
 
-import { Contract, BigNumber, utils } from 'ethers'
-import { Bal, Mint, Stake, Claim, Approve, UserState, GlobalState, GetCkiDistr, GetFdgDistr} from './utils/Contracts';
-import { useEthers, useEtherBalance, useCall, useContractFunction, useBlockMeta } from '@usedapp/core'
-
-import CKI from "./abis/Cki.json";
-import BaseERC20Distr from "./abis/BaseERC20Distr.json";
+import {  BigNumber } from 'ethers'
+import { Bal, Mint} from './utils/Contracts';
+import { useEthers, useEtherBalance,  useBlockMeta } from '@usedapp/core'
 
 import { formatEther } from '@ethersproject/units'
 import { Chainlabs } from ".";
@@ -27,9 +24,12 @@ import { Decimal } from "decimal.js";
 import { CKIStaking, FDGStaking } from "./utils/Staking";
 
 
-function App() {
 
+function App() {
 	const { activateBrowserWallet, account, deactivate } = useEthers();
+	const chainlabsBalance = useEtherBalance(account, { chainId: Chainlabs.chainId });
+	const ckiBalance = Bal("0x5D6373b77c14ABf3FbBFe418DA4b4F0125c637FF", account);
+	const fdgBalance = Bal("0xE89A84Fd29eb0C35cEB7B1e13E567844Ed4DB361", account);
 
 	const date: Date | undefined = useBlockMeta().timestamp;
 	let timestamp: any;
@@ -38,13 +38,6 @@ function App() {
 	} else {
 		timestamp = new Decimal(0);
 	}
-
-
-function App() {
-	const { activateBrowserWallet, account, deactivate } = useEthers();
-	const chainlabsBalance = useEtherBalance(account, { chainId: Chainlabs.chainId });
-	const ckiBalance = Bal("0x5D6373b77c14ABf3FbBFe418DA4b4F0125c637FF", account);
-	const fdgBalance = Bal("0xE89A84Fd29eb0C35cEB7B1e13E567844Ed4DB361", account);
 
 	const ckiMint = Mint("0x5D6373b77c14ABf3FbBFe418DA4b4F0125c637FF");
 	const fdgMint = Mint("0xE89A84Fd29eb0C35cEB7B1e13E567844Ed4DB361");
@@ -61,30 +54,9 @@ function App() {
 		setOpenRepartition((o: boolean): boolean => !o);
 	}
 
-	// const stakeCKI = Stake("0x0a58c62697958311c82F6CA5645fb72aeBCD8522");
-	// const approveCKI = Approve("0x5D6373b77c14ABf3FbBFe418DA4b4F0125c637FF");
-
-	// const stakeFDG = Stake("0x38122594740D9BFfde1a577Fb0692a52bF0d5F40");
-	// const approveFDG = Approve("0xE89A84Fd29eb0C35cEB7B1e13E567844Ed4DB361");
-
-	// const claimCKI = Claim("0x38122594740D9BFfde1a577Fb0692a52bF0d5F40", account);
-	// const claimFDG = Claim("0x0a58c62697958311c82F6CA5645fb72aeBCD8522", account);
-
 	const ckiStaking = new CKIStaking(account);
 	const fdgStaking = new FDGStaking(account);
 
-	const [openStaking, setOpenStaking] = useState<boolean>(false);
-	const closeStaking = () => setOpenStaking(false);
-	const [openRepartition, setOpenRepartition] = useState<boolean>(false);
-	const closeRepartition = () => setOpenRepartition(false);
-	const [isLocking, setIsLocking] = useState<boolean>(false);
-	const [repartitionToken, setRepartitionToken] = useState<TokenType>(TokenType.COOKIE);
-
-	const openRepartitionPopup = (isLocking: boolean, tokentype: TokenType) => {
-		setIsLocking(isLocking);
-		setRepartitionToken(tokentype);
-		setOpenRepartition((o: boolean): boolean => !o);
-	}
 	return (
 		<div className="App">
 			<Loading />
