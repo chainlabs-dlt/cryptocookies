@@ -29,15 +29,17 @@ contract CCLocking is CCStaking {
 	/// @notice Constructs a CCLocking contract.
 	/// @param _lockedToken The locked token.
 	/// @param _bridge The bridge contract from which to receive revenue.
-	/// @param _periodDuration The period duration.
+	/// @param _end The end of the contract period.
+	/// @param _erc20MintableDeployer An ERC20MintableDeployer contract.
 	constructor(
 		address _lockedToken,
 		address _bridge,
-		uint256 _periodDuration
+		uint256 _end,
+		ERC20MintableDeployer _erc20MintableDeployer
 	)
 		CCStaking(
 			address(
-				new ERC20Mintable(
+				_erc20MintableDeployer.deploy(
 					string.concat("Yield", " ", ERC20(_lockedToken).name()),
 					string.concat("y", ERC20(_lockedToken).symbol())
 				)
@@ -48,12 +50,13 @@ contract CCLocking is CCStaking {
 		LOCKED_TOKEN = ERC20(_lockedToken);
 
 		YIELD_TOKEN = ERC20Mintable(address(STAKED_TOKEN));
-		CAPITAL_TOKEN = new ERC20Mintable(
+		CAPITAL_TOKEN = _erc20MintableDeployer.deploy(
 			string.concat("Capital", " ", LOCKED_TOKEN.name()),
 			string.concat("c", LOCKED_TOKEN.symbol())
 		);
 
-		PERIOD_END = block.timestamp + _periodDuration;
+		require(_end > block.timestamp);
+		PERIOD_END = _end;
 	}
 
 	/// @notice Locks a given amount of TOKEN to obtain an equivalent amount of
@@ -78,5 +81,32 @@ contract CCLocking is CCStaking {
 			require(YIELD_TOKEN.transferFrom(msg.sender, address(this), _amount));
 
 		LOCKED_TOKEN.transfer(msg.sender, _amount);
+	}
+}
+
+/// @title A CCLocking Deployer
+/// @author Chainlabs Switzerland SA
+/// @notice This proxy contract deploys CCLocking contracts to reduce the
+/// overall contract sizes introduced by Spurious Dragon.
+contract LockingDeployer {
+	ERC20MintableDeployer public immutable ERC20_MINTABLE_DEPLOYER;
+
+	/// @notice Constructs a locking pool deployer.
+	/// @param _erc20MintableDeployer An ERC20MintableDeployer contract.
+	constructor(address _erc20MintableDeployer) {
+		ERC20_MINTABLE_DEPLOYER = ERC20MintableDeployer(_erc20MintableDeployer);
+	}
+
+	/// @notice Deploys a CCLocking contract with the provided arguments.
+	/// @param _lockedToken The locked token.
+	/// @param _bridge The bridge contract from which to receive revenue.
+	/// @param _end The end of the contract period.
+	/// @return The CCLocking contract.
+	function deploy(
+		address _lockedToken,
+		address _bridge,
+		uint256 _end
+	) external returns (CCLocking) {
+		return new CCLocking(_lockedToken, _bridge, _end, ERC20_MINTABLE_DEPLOYER);
 	}
 }
