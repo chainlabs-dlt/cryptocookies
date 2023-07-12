@@ -102,7 +102,7 @@ export function GlobalState(distrAddress: string) {
 
  export function Stake(distrAddress: string) {
 	const contract = new Contract(distrAddress, new utils.Interface(CCStaking));
-	const { send } = useContractFunction(contract, 'stake', {
+	const { state, send } = useContractFunction(contract, 'stake', {
 		transactionName: 'stake',
 		gasLimitBufferPercentage: 10,
 	})
