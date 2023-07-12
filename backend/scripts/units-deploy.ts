@@ -63,11 +63,11 @@ export async function deployPoolHandlerAndTransferControl(ckiBridge : any, fdgBr
     const CCPoolHandler = await ethers.getContractFactory("CCPoolHandler");
     const ccPoolHandler = await CCPoolHandler.deploy(ckiBridge.address, fdgBridge.address, lockingDeployer.address, dao.address);
 
-    await ckiBridge.grantRole((await ckiBridge.DEFAULT_ADMIN_ROLE()), ccPoolHandler.address);
-    await ckiBridge.revokeRole((await ckiBridge.DEFAULT_ADMIN_ROLE()), admin.address);
+    await ckiBridge.connect(admin).grantRole((await ckiBridge.DEFAULT_ADMIN_ROLE()), ccPoolHandler.address);
+    await ckiBridge.connect(admin).revokeRole((await ckiBridge.DEFAULT_ADMIN_ROLE()), admin.address);
 
-    await fdgBridge.grantRole((await fdgBridge.DEFAULT_ADMIN_ROLE()), ccPoolHandler.address);
-    await fdgBridge.revokeRole((await fdgBridge.DEFAULT_ADMIN_ROLE()), admin.address);
+    await fdgBridge.connect(admin).grantRole((await fdgBridge.DEFAULT_ADMIN_ROLE()), ccPoolHandler.address);
+    await fdgBridge.connect(admin).revokeRole((await fdgBridge.DEFAULT_ADMIN_ROLE()), admin.address);
 
     return {ccPoolHandler};
 }

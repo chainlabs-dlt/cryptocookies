@@ -7,7 +7,7 @@ import {
     deployRevDistrs,
     deployCCCore,
     fuelCCCore,
-    extractBridges,
+    extractBridges
 } from "../../../scripts/units-deploy";
 
 describe("CCCore", function () {
@@ -15,18 +15,14 @@ describe("CCCore", function () {
         const signers = await ethers.getSigners();
         const [owner, other] = signers;
 
-        // Deploy tokens, distributors and CCCore
         const {cki, fdg} = await deployTokens();
         const {ckiDistr, fdgDistr} = await deployRevDistrs(cki, fdg, owner);
         const {cccore} = await deployCCCore(ckiDistr, fdgDistr, owner);
 
-        // Distributors should only fuel CCCore
         await fuelCCCore(ckiDistr, fdgDistr, cccore);
 
-        // Extract bridges
         const {ckiBridge, fdgBridge} = await extractBridges(cccore);
 
-        // Initial dev mint for owner (1B)
         const startCki = ETHER.mul(1000000000000);
         const startFdg = ETHER.mul(1000000000000);
         await cki.devMint(startCki);
@@ -47,7 +43,6 @@ describe("CCCore", function () {
         };
     }
 
-    // TODO: Move these tests to CrytpCookies.ts later
     describe("Check Deployment", function () {
         it("Should properly deploy CKI token", async function () {
             const {cki, owner, startCki} = await loadFixture(deployEmptyFixture);

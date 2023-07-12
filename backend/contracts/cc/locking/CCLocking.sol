@@ -77,7 +77,7 @@ contract CCLocking is CCStaking {
 	/// @param _amount The amount to lock.
 	function unlock(uint256 _amount) external {
 		require(CAPITAL_TOKEN.transferFrom(msg.sender, address(this), _amount));
-		if (PERIOD_END < block.timestamp)
+		if (PERIOD_END <= block.timestamp)
 			require(YIELD_TOKEN.transferFrom(msg.sender, address(this), _amount));
 
 		LOCKED_TOKEN.transfer(msg.sender, _amount);

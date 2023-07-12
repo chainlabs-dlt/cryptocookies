@@ -95,20 +95,19 @@ contract CCPoolHandler {
 	/// @notice Schedules a	new locking pool creation.
 	/// Can only be called by the DAO.
 	/// @param _cki True for Cookie locking, false for Fudge locking.
-	/// @param _start When the locking pool will start receiving revenue.
+	/// @param _startIn When the locking pool will start receiving revenue.
 	/// @param _period The lifespan of the locking pool (after start).
 	/// @param _stake The revenue stake (once started, until the end).
 	function scheduleLocking(
 		bool _cki,
-		uint256 _start,
+		uint256 _startIn,
 		uint256 _period,
 		uint256 _stake
 	) external onlyDAO {
-		require(_start >= block.timestamp);
-
 		address tkn = _cki ? address(CKI) : address(FDG);
 		address bridge = _cki ? address(CKI_BRIDGE) : address(FDG_BRIDGE);
-		uint256 end = _start + _period;
+		uint256 start = block.timestamp + _startIn;
+		uint256 end = start + _period;
 
 		address pool = address(DEPLOYER.deploy(tkn, bridge, end));
 
@@ -117,7 +116,7 @@ contract CCPoolHandler {
 			true,
 			_cki,
 			LockStatus.SCHEDULED,
-			uint40(_start),
+			uint40(start),
 			uint40(end),
 			uint128(_stake)
 		);
