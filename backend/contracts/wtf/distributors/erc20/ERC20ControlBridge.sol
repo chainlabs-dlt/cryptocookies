@@ -5,25 +5,25 @@
 pragma solidity ^0.8.18;
 
 import "./ERC20ControlDistr.sol";
-import "../../interfaces/functional/Claimable.sol";
+import "../../interfaces/functional/ERC20Claimable.sol";
 
 /// @title A ERC20 Controlled Bridge
 /// @author Chainlabs Switzerland SA
 /// @notice This contract redirects the revenue distributed by a source to a set of
 /// controlled addresses. Claiming the source is done through a callback interface.
 contract ERC20ControlBridge is ERC20ControlDistr {
-	Claimable public immutable SOURCE;
+	ERC20Claimable public immutable SOURCE;
 
 	/// @notice Constructs a controlled ERC20 bridge contract.
-	/// @param _token The relevant ERC20 token.
-	/// @param _source A claimable callback.
+	/// @param _token The token to redirect.
+	/// @param _source The source contract from which to receive revenue.
 	/// @param _controller The default controller/admin that may change stake.
 	constructor(
 		address _token,
 		address _source,
 		address _controller
 	) ERC20ControlDistr(_token, _controller) {
-		SOURCE = Claimable(_source);
+		SOURCE = ERC20Claimable(_source);
 	}
 
 	/// @notice Claims a msg.sender's pending balance.

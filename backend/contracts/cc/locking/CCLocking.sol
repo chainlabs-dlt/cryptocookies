@@ -28,12 +28,12 @@ contract CCLocking is CCStaking {
 
 	/// @notice Constructs a CCLocking contract.
 	/// @param _lockedToken The locked token.
-	/// @param _bridge The bridge contract from which to receive revenue.
+	/// @param _source The source contract from which to receive revenue.
 	/// @param _end The end of the contract period.
 	/// @param _erc20MintableDeployer An ERC20MintableDeployer contract.
 	constructor(
 		address _lockedToken,
-		address _bridge,
+		address _source,
 		uint256 _end,
 		ERC20MintableDeployer _erc20MintableDeployer
 	)
@@ -44,7 +44,7 @@ contract CCLocking is CCStaking {
 					string.concat("y", ERC20(_lockedToken).symbol())
 				)
 			),
-			_bridge
+			_source
 		)
 	{
 		LOCKED_TOKEN = ERC20(_lockedToken);
@@ -99,14 +99,14 @@ contract LockingDeployer {
 
 	/// @notice Deploys a CCLocking contract with the provided arguments.
 	/// @param _lockedToken The locked token.
-	/// @param _bridge The bridge contract from which to receive revenue.
+	/// @param _source The source contract from which to receive revenue.
 	/// @param _end The end of the contract period.
 	/// @return The CCLocking contract.
 	function deploy(
 		address _lockedToken,
-		address _bridge,
+		address _source,
 		uint256 _end
 	) external returns (CCLocking) {
-		return new CCLocking(_lockedToken, _bridge, _end, ERC20_MINTABLE_DEPLOYER);
+		return new CCLocking(_lockedToken, _source, _end, ERC20_MINTABLE_DEPLOYER);
 	}
 }

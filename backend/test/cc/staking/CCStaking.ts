@@ -13,7 +13,7 @@ import {
 describe("CCStaking", function () {
     async function deployEmptyFixture() {
         const signers = await ethers.getSigners();
-        const [owner, other] = signers;
+        const [owner] = signers;
 
         // Deploy tokens, distributors and CCCore
         const {cki, fdg} = await deployTokens();

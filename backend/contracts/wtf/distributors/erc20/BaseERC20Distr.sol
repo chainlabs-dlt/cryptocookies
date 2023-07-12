@@ -5,6 +5,7 @@
 pragma solidity ^0.8.18;
 
 import "../../libraries/RevDistr.sol";
+import "../../interfaces/functional/ERC20Claimable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /// @title A Basic ERC20 Distributor
@@ -12,7 +13,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 /// @notice This abstract contract provides boilerplate code for a primitive ERC20 distributor.
 /// @dev By default, injections are immediate, but a more fine-grained implementation can
 /// be achieved by redefining the _claimHook() function.
-abstract contract BaseERC20Distr {
+abstract contract BaseERC20Distr is ERC20Claimable {
 	IERC20 public immutable TOKEN;
 
 	RevDistr.LazyGlobalState public globalState;
@@ -41,11 +42,17 @@ abstract contract BaseERC20Distr {
 	/// msg.sender will be credited with the newly acquired ERC20 tokens.
 	/// @dev This function calls the _claimHook() hook before executing a claim.
 	/// @return amountClaimed The amount that has been claimed.
-	function claim() external virtual returns (uint256 amountClaimed) {
+	function claim() external virtual override returns (uint256 amountClaimed) {
 		_claimHook();
 
 		amountClaimed = RevDistr.claim(usersState[msg.sender], globalState.index);
 		require(TOKEN.transfer(msg.sender, amountClaimed));
+	}
+
+	/// @notice Returns the ERC20 token address of the distributor.
+	/// @return The ERC20 token address.
+	function token() external view override returns (address) {
+		return address(TOKEN);
 	}
 
 	/// @dev Adds revenue to be distributed.

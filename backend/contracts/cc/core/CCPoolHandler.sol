@@ -36,6 +36,7 @@ contract CCPoolHandler {
 	/// Contains information on the lifecycle of a locking pool.
 	struct LockMetadata {
 		bool valid;
+		bool cki; // True for cki pools, false for fdg
 		LockStatus status;
 		uint40 start;
 		uint40 end;
@@ -114,6 +115,7 @@ contract CCPoolHandler {
 		pools.push(pool);
 		lockings[pool] = LockMetadata(
 			true,
+			_cki,
 			LockStatus.SCHEDULED,
 			uint40(_start),
 			uint40(end),
@@ -130,7 +132,8 @@ contract CCPoolHandler {
 		require(block.timestamp >= metadata.start);
 
 		metadata.status = LockStatus.RUNNING;
-		CCLocking(_pool).BRIDGE().userChangeStake(_pool, int256(uint256(metadata.stake)));
+		ERC20ControlBridge bridge = metadata.cki ? CKI_BRIDGE : FDG_BRIDGE;
+		bridge.userChangeStake(_pool, int256(uint256(metadata.stake)));
 	}
 
 	/// @notice Stops a running locking pool that has expired (i.e. stop timestamp has passed).
@@ -142,6 +145,7 @@ contract CCPoolHandler {
 		require(block.timestamp >= metadata.end);
 
 		metadata.status = LockStatus.STOPPED;
-		CCLocking(_pool).BRIDGE().userChangeStake(_pool, int256(uint256(metadata.stake)) * -1);
+		ERC20ControlBridge bridge = metadata.cki ? CKI_BRIDGE : FDG_BRIDGE;
+		bridge.userChangeStake(_pool, int256(uint256(metadata.stake)) * -1);
 	}
 }
