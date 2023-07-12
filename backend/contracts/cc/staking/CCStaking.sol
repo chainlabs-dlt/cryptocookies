@@ -3,7 +3,6 @@
 /// All Rights Reserved
 
 import "../../wtf/distributors/erc20/BaseERC20Distr.sol";
-import "../../wtf/interfaces/functional/ERC20Claimable.sol";
 
 pragma solidity ^0.8.18;
 

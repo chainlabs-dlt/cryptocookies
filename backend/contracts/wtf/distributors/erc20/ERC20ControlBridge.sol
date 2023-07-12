@@ -5,7 +5,7 @@
 pragma solidity ^0.8.18;
 
 import "./ERC20ControlDistr.sol";
-import "../../interfaces/functional/ERC20Claimable.sol";
+import "./ERC20Claimable.sol";
 
 /// @title A ERC20 Controlled Bridge
 /// @author Chainlabs Switzerland SA

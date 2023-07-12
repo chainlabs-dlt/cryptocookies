@@ -4,7 +4,6 @@
 
 import "../../wtf/apps/WtfApp.sol";
 import "../../wtf/distributors/erc20/ERC20ControlBridge.sol";
-import "../../wtf/interfaces/functional/ERC20Claimable.sol";
 
 pragma solidity ^0.8.18;
 
