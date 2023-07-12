@@ -2,7 +2,13 @@ import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
 import {ethers} from "hardhat";
 import {ETHER} from "../../utils/Numbers";
-import {deployTokens, deployRevDistrs, deployCCCore, extractBridges} from "../../../scripts/units-deploy";
+import {
+    deployTokens,
+    deployRevDistrs,
+    deployCCCore,
+    fuelCCCore,
+    extractBridges,
+} from "../../../scripts/units-deploy";
 
 describe("CCCore", function () {
     async function deployEmptyFixture() {
@@ -15,8 +21,7 @@ describe("CCCore", function () {
         const {cccore} = await deployCCCore(ckiDistr, fdgDistr, owner);
 
         // Distributors should only fuel CCCore
-        await ckiDistr.userChangeStake(cccore.address, ETHER);
-        await fdgDistr.userChangeStake(cccore.address, ETHER);
+        await fuelCCCore(ckiDistr, fdgDistr, cccore);
 
         // Extract bridges
         const {ckiBridge, fdgBridge} = await extractBridges(cccore);

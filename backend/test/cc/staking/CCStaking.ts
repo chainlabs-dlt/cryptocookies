@@ -6,8 +6,11 @@ import {
     deployTokens,
     deployRevDistrs,
     deployCCCore,
+    fuelCCCore,
     extractBridges,
-    deployStaking
+    deployDeployers,
+    deployPoolHandlerAndTransferControl,
+    extractStakingAndAllocate
 } from "../../../scripts/units-deploy";
 
 describe("CCStaking", function () {
@@ -15,24 +18,19 @@ describe("CCStaking", function () {
         const signers = await ethers.getSigners();
         const [owner] = signers;
 
-        // Deploy tokens, distributors and CCCore
         const {cki, fdg} = await deployTokens();
         const {ckiDistr, fdgDistr} = await deployRevDistrs(cki, fdg, owner);
         const {cccore} = await deployCCCore(ckiDistr, fdgDistr, owner);
 
-        // Distributors should only fuel CCCore
-        await ckiDistr.userChangeStake(cccore.address, ETHER);
-        await fdgDistr.userChangeStake(cccore.address, ETHER);
+        await fuelCCCore(ckiDistr, fdgDistr, cccore);
 
-        // Extract bridges
         const {ckiBridge, fdgBridge} = await extractBridges(cccore);
 
-        // Deploy staking
-        const {ckiStaking, fdgStaking} = await deployStaking(cki, ckiBridge, fdg, fdgBridge);
+        const {lockingDeployer} = await deployDeployers();
 
-        // Bridges should only fuel respective CCStaking pools
-        await ckiBridge.userChangeStake(fdgStaking.address, ETHER);
-        await fdgBridge.userChangeStake(ckiStaking.address, ETHER);
+        const {ccPoolHandler} = await deployPoolHandlerAndTransferControl(ckiBridge, fdgBridge, lockingDeployer, owner, owner);
+
+        const {ckiStaking, fdgStaking} = await extractStakingAndAllocate(ccPoolHandler);
 
         // Initial dev mint for owner (1B)
         const startCki = ETHER.mul(1000000000000);

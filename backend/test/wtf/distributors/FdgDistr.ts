@@ -9,7 +9,6 @@ describe("FdgDistr", function () {
         const signers = await ethers.getSigners();
         const [owner, other] = signers;
 
-        // Deploy fdg and fdgDistr
         const {cki, fdg} = await deployTokens();
         const {fdgDistr} = await deployRevDistrs(cki, fdg, owner);
 

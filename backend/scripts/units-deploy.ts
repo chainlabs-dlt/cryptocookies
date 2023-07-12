@@ -36,12 +36,51 @@ export async function deployCCCore(ckiDistr : any, fdgDistr : any, ccDao : any) 
     return {cccore};
 }
 
+export async function fuelCCCore(ckiDistr : any, fdgDistr : any, cccore : any) {
+    await ckiDistr.userChangeStake(cccore.address, ETHER);
+    await fdgDistr.userChangeStake(cccore.address, ETHER);
+}
+
 export async function extractBridges(cccore : any) {
     const Bridge = await ethers.getContractFactory("ERC20ControlBridge");
     const ckiBridge = Bridge.attach(await cccore.CKI_BRIDGE());
     const fdgBridge = Bridge.attach(await cccore.FDG_BRIDGE());
 
     return {ckiBridge, fdgBridge};
+}
+
+export async function deployDeployers() {
+    const ERC20MintableDeployer = await ethers.getContractFactory("ERC20MintableDeployer");
+    const erc20MintableDeployer = await ERC20MintableDeployer.deploy();
+
+    const LockingDeployer = await ethers.getContractFactory("LockingDeployer");
+    const lockingDeployer = await LockingDeployer.deploy(erc20MintableDeployer.address);
+
+    return {lockingDeployer};
+}
+
+export async function deployPoolHandlerAndTransferControl(ckiBridge : any, fdgBridge : any, lockingDeployer : any, dao : any, admin : any) {
+    const CCPoolHandler = await ethers.getContractFactory("CCPoolHandler");
+    const ccPoolHandler = await CCPoolHandler.deploy(ckiBridge.address, fdgBridge.address, lockingDeployer.address, dao.address);
+
+    await ckiBridge.grantRole((await ckiBridge.DEFAULT_ADMIN_ROLE()), ccPoolHandler.address);
+    await ckiBridge.revokeRole((await ckiBridge.DEFAULT_ADMIN_ROLE()), admin.address);
+
+    await fdgBridge.grantRole((await fdgBridge.DEFAULT_ADMIN_ROLE()), ccPoolHandler.address);
+    await fdgBridge.revokeRole((await fdgBridge.DEFAULT_ADMIN_ROLE()), admin.address);
+
+    return {ccPoolHandler};
+}
+
+export async function extractStakingAndAllocate(ccPoolHandler : any) {
+    const CCStaking = await ethers.getContractFactory("CCStaking");
+    const ckiStaking = CCStaking.attach(await ccPoolHandler.CKI_STAKING());
+    const fdgStaking = CCStaking.attach(await ccPoolHandler.FDG_STAKING());
+
+    await ccPoolHandler.changeStake(true, ETHER);
+    await ccPoolHandler.changeStake(false, ETHER);
+
+    return {ckiStaking, fdgStaking};
 }
 
 export async function fuelDistr(cki : any, ckiDistr : any, fdg : any, fdgDistr : any) {
@@ -55,12 +94,4 @@ export async function fuelDistr(cki : any, ckiDistr : any, fdg : any, fdgDistr :
 
     await ckiDistr.injectInvExp(CKI_FUEL.div(BN(10).pow(18)));
     await fdgDistr.injectFlatten(FDG_FUEL);
-}
-
-export async function deployStaking(cki : any, ckiBridge : any, fdg : any, fdgBridge: any) {
-    const CCStaking = await ethers.getContractFactory("CCStaking");
-    const ckiStaking = await CCStaking.deploy(cki.address, fdgBridge.address);
-    const fdgStaking = await CCStaking.deploy(fdg.address, ckiBridge.address);
-
-    return {ckiStaking, fdgStaking};
 }
