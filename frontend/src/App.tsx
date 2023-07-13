@@ -13,73 +13,32 @@ import Loading from "./components/Loading";
 import Popup from "reactjs-popup";
 import AssetsRepartitionPopup from "./components/AssetsRepartitionPopup";
 
-import { Contract, BigNumber, utils } from 'ethers'
-import CKI from "./abis/Cki.json";
-import BaseERC20Distr from "./abis/BaseERC20Distr.json";
-import { useEthers, useEtherBalance, useCall, useContractFunction } from '@usedapp/core'
+import {  BigNumber } from 'ethers'
+import { Bal, Mint} from './utils/Contracts';
+import { useEthers, useEtherBalance,  useBlockMeta } from '@usedapp/core'
+
 import { formatEther } from '@ethersproject/units'
 import { Chainlabs } from ".";
 import StackingMenu from "./components/StackingMenu";
+import { Decimal } from "decimal.js";
+import { CKIStaking, FDGStaking } from "./utils/Staking";
 
-function Bal(tokenAddress: string, account: string | undefined): BigNumber | undefined {
-	const { value, error } = useCall(account && {
-	  contract: new Contract(tokenAddress, new utils.Interface(CKI)),
-	  method: 'balanceOf',
-	  args: [account]
-	}) ?? {}
-	if(error) {
-	  console.error(error.message)
-	  return undefined
-	}
-	return value?.[0]
-}
 
-function Mint(tokenAddress: string) {
-	const contract = new Contract(tokenAddress, new utils.Interface(CKI))
-
-	const { send } = useContractFunction(contract, 'devMint', {
-		transactionName: 'Mint',
-		gasLimitBufferPercentage: 10,
-	})
-
-	return (amount: BigNumber) => {
-		void send(amount);
-	}
-}
-
-function UserStake(distrAddress: string, account: string | undefined) {
-	const { value, error } = useCall(account && {
-	  contract: new Contract(distrAddress, new utils.Interface(BaseERC20Distr)),
-	  method: 'usersState',
-	  args: [account]
-	}) ?? {}
-	if(error) {
-	  console.error(error.message)
-	  return undefined
-	}
-	return value;
-}
-
-function GlobalStake(distrAddress: string) {
-	const { value, error } = useCall({
-	  contract: new Contract(distrAddress, new utils.Interface(BaseERC20Distr)),
-	  method: 'globalState',
-	  args: []
-	}) ?? {}
-	if(error) {
-	  console.error(error.message)
-	  return undefined
-	}
-	return value;
-}
 
 function App() {
 	const { activateBrowserWallet, account, deactivate } = useEthers();
 	const chainlabsBalance = useEtherBalance(account, { chainId: Chainlabs.chainId });
 	const ckiBalance = Bal("0x5D6373b77c14ABf3FbBFe418DA4b4F0125c637FF", account);
 	const fdgBalance = Bal("0xE89A84Fd29eb0C35cEB7B1e13E567844Ed4DB361", account);
-	const ckiUserStake = UserStake("0x0a58c62697958311c82F6CA5645fb72aeBCD8522", account);
-	const ckiGlobalStake = GlobalStake("0x0a58c62697958311c82F6CA5645fb72aeBCD8522");
+
+	const date: Date | undefined = useBlockMeta().timestamp;
+	let timestamp: any;
+	if (date) {
+		timestamp = new Decimal(Math.floor(date.getTime() / 1000));
+	} else {
+		timestamp = new Decimal(0);
+	}
+
 	const ckiMint = Mint("0x5D6373b77c14ABf3FbBFe418DA4b4F0125c637FF");
 	const fdgMint = Mint("0xE89A84Fd29eb0C35cEB7B1e13E567844Ed4DB361");
 	const [openStaking, setOpenStaking] = useState<boolean>(false);
@@ -95,6 +54,9 @@ function App() {
 		setOpenRepartition((o: boolean): boolean => !o);
 	}
 
+	const ckiStaking = new CKIStaking(account);
+	const fdgStaking = new FDGStaking(account);
+
 	return (
 		<div className="App">
 			<Loading />
@@ -109,20 +71,33 @@ function App() {
 				>
 					<Scene
 						onMountainClick={function (): void {
-							console.log(ckiGlobalStake);
+
+							console.log('FDG Balance = ' + fdgBalance?.toString());
+							console.log('CKI Balance = ' + ckiBalance?.toString());
+							console.log('Claimable FDG = ' + ckiStaking.claimable(timestamp).div(new Decimal(10**18)).toString());
+							console.log('Claimable CKI = ' + fdgStaking.claimable(timestamp).div(new Decimal(10**18)).toString());
+
 						}}
 						onCottageClick={function (): void {
 							console.log("cottage");
 							setOpenStaking((o: boolean): boolean => !o)
 						}}
-						onMineEntranceClick={function (): void {
-							console.log("mine entrance");
-							openRepartitionPopup(true, TokenType.FUDGE);
-						}}
+            
+						onMineEntranceClick={
+							function (): void { 
+								// approveFDG("0x38122594740D9BFfde1a577Fb0692a52bF0d5F40", BigNumber.from(10).pow(17));
+                // openRepartitionPopup(true, TokenType.FUDGE);
+								ckiStaking.stake(BigNumber.from(10).pow(17));
+							 }
+						}
 						onPumpClick={function (): void {
 							console.log("pump");
-							openRepartitionPopup(true, TokenType.COOKIE);
+							if (account) {
+								ckiStaking.claim();
+							} 
+							// openRepartitionPopup(true, TokenType.COOKIE);
 						}}
+        
 						onAnvilClick={function (): void {
 							console.log("anvil");
 						}}
@@ -194,21 +169,21 @@ function App() {
 				/>
 				<div className="GUIGameTokens">
 					<TokenHeader
-						onClick={function (): void { fdgMint(BigNumber.from(10).pow(17).mul(4)) }}
+						onClick={function (): void { ckiMint(BigNumber.from(10).pow(17).mul(4)) }}
 						stackingPercent={10}
 						lockingPercent={30}
 						token={TokenType.FUDGE}
 						amount={fdgBalance ? fdgBalance.div(BigNumber.from(10).pow(13)).toNumber() / 10**5 : 0}
 						output={2}
 					/>
-					<TokenHeader
+					{/* <TokenHeader
 						onClick={function (): void { ckiMint(BigNumber.from(10).pow(17).mul(4)) }}
 						stackingPercent={40}
 						lockingPercent={30}
 						token={TokenType.COOKIE}
 						amount={ckiBalance ? ckiBalance.div(BigNumber.from(10).pow(13)).toNumber() / 10**5 : 0}
-						output={ckiUserStake ? ckiUserStake.ownStake.div(BigNumber.from(10).pow(13)).toNumber() / 10**5 : 0}
-					/>
+						output={ckiUserState ? ckiUserState.ownStake.div(BigNumber.from(10).pow(13)).toNumber() / 10**5 : 0}
+					/> */}
 				</div>
 			</div>
 
