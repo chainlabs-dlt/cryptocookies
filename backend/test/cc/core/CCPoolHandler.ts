@@ -32,12 +32,6 @@ describe("CCPoolHandler", function () {
 
         const {ckiStaking, fdgStaking} = await extractStakingAndAllocate(ccPoolHandler);
 
-        // Initial dev mint for owner (1B)
-        const startCki = ETHER.mul(1000000000000);
-        const startFdg = ETHER.mul(1000000000000);
-        await cki.devMint(startCki);
-        await fdg.devMint(startFdg);
-
         return {
             cki,
             fdg,
@@ -49,8 +43,6 @@ describe("CCPoolHandler", function () {
             fdgStaking,
             owner,
             other,
-            startCki,
-            startFdg,
             ccPoolHandler
         };
     }

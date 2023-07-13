@@ -8,6 +8,10 @@ function delay(ms : number) {
 export const DEFAULT_GAMMA = 2105 * 60 * 60 * 24; // 4y half-life
 export const DEFAULT_PERIOD = 60 * 60 * 24 * 365; // One year for convenience
 export const HALF_LIFE = 4 * 365 * 24 * 60 * 60 - 79750;
+
+export const LOCK_PERIOD = 60 * 60 * 24 * 7 * 2; // Two weeks
+const LOCK_STAKE = ETHER.mul(3); // 75% locking
+
 const CKI_FUEL = ETHER.mul(1000000000000); // One billion
 const FDG_FUEL = ETHER.mul(500000000); // Five millions
 
@@ -81,6 +85,20 @@ export async function extractStakingAndAllocate(ccPoolHandler : any) {
     await ccPoolHandler.changeStake(false, ETHER);
 
     return {ckiStaking, fdgStaking};
+}
+
+export async function scheduleActivateExtractLockingPair(ccPoolHandler : any) {
+    const CCLocking = await ethers.getContractFactory("CCLocking");
+    await ccPoolHandler.scheduleLocking(true, 0, LOCK_PERIOD, LOCK_STAKE);
+    await ccPoolHandler.scheduleLocking(false, 0, LOCK_PERIOD, LOCK_STAKE);
+
+    const ckiLocking = CCLocking.attach(await ccPoolHandler.pools(2));
+    const fdgLocking = CCLocking.attach(await ccPoolHandler.pools(3));
+
+    await ccPoolHandler.startLocking(ckiLocking.address);
+    await ccPoolHandler.startLocking(fdgLocking.address);
+
+    return {ckiLocking, fdgLocking};
 }
 
 export async function fuelDistr(cki : any, ckiDistr : any, fdg : any, fdgDistr : any) {

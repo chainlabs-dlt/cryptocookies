@@ -64,7 +64,7 @@ contract CCLocking is CCStaking {
 	/// Requires a prior ERC20 token approval.
 	/// @param _amount The amount to lock.
 	function lock(uint256 _amount) external {
-		require(PERIOD_END < block.timestamp);
+		require(block.timestamp < PERIOD_END);
 		require(LOCKED_TOKEN.transferFrom(msg.sender, address(this), _amount));
 
 		CAPITAL_TOKEN.mint(msg.sender, _amount);
@@ -77,7 +77,7 @@ contract CCLocking is CCStaking {
 	/// @param _amount The amount to lock.
 	function unlock(uint256 _amount) external {
 		require(CAPITAL_TOKEN.transferFrom(msg.sender, address(this), _amount));
-		if (PERIOD_END <= block.timestamp)
+		if (block.timestamp < PERIOD_END)
 			require(YIELD_TOKEN.transferFrom(msg.sender, address(this), _amount));
 
 		LOCKED_TOKEN.transfer(msg.sender, _amount);
