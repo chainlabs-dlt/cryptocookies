@@ -1,72 +1,62 @@
 import {ethers} from "hardhat";
 import {BN, ETHER} from "../test/utils/Numbers";
+import {
+    deployTokens,
+    deployRevDistrs,
+    deployCCCore,
+    fuelCCCore,
+    extractBridges,
+    deployDeployers,
+    deployPoolHandlerAndTransferControl,
+    extractStakingAndAllocate,
+    scheduleActivateExtractLockingPair,
+    fuelDistr
+} from "./units-deploy";
 
-function delay(ms : number) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-async function main() { // Get owner/signer
+async function main() {
     const [deployer] = await ethers.getSigners();
 
-    // RevDistr params
-    const defaultGamma = 2105 * 60 * 60 * 24; // 4y half-life
-    const defaultPeriod = 60 * 60 * 24 * 365;
-    // One year: for convenience
+    console.log("-----------------------------")
+    const {cki, fdg} = await deployTokens();
+    console.log("cki: " + cki.address);
+    console.log("fdg: " + fdg.address);
 
-    // Deploy tokens
-    const CKI = await ethers.getContractFactory("Cki");
-    const cki = await CKI.deploy();
-    await cki.deployed();
-    console.log("CKI: " + cki.address);
+    console.log("-----------------------------")
+    const {ckiDistr, fdgDistr} = await deployRevDistrs(cki, fdg, deployer);
+    console.log("ckiDistr: " + ckiDistr.address);
+    console.log("fdgDistr: " + fdgDistr.address);
 
-    const FDG = await ethers.getContractFactory("Fdg");
-    const fdg = await FDG.deploy();
-    await fdg.deployed();
-    console.log("FDG: " + fdg.address);
+    console.log("-----------------------------")
+    const {cccore} = await deployCCCore(ckiDistr, fdgDistr, deployer);
+    console.log("cccore: " + cccore.address);
 
-    // Deploy distributors
-    const CkiDistr = await ethers.getContractFactory("CkiDistr");
-    const ckiDistr = await CkiDistr.deploy(cki.address, deployer.address, defaultGamma);
-    await ckiDistr.deployed();
-    console.log("CkiDistr: " + ckiDistr.address);
+    await fuelCCCore(ckiDistr, fdgDistr, cccore);
 
-    const FdgDistr = await ethers.getContractFactory("FdgDistr");
-    const fdgDistr = await FdgDistr.deploy(fdg.address, deployer.address, defaultPeriod);
-    await fdgDistr.deployed();
-    console.log("FdgDistr: " + fdgDistr.address);
+    console.log("-----------------------------")
+    const {ckiBridge, fdgBridge} = await extractBridges(cccore);
+    console.log("ckiBridge: " + ckiBridge.address);
+    console.log("fdgBridge: " + fdgBridge.address);
 
-    // Deploy CCCore
-    const CCCore = await ethers.getContractFactory("CCCore");
-    const cccore = await CCCore.deploy(fdgDistr.address, ckiDistr.address);
-    await cccore.deployed();
-    console.log("CCCore: " + cccore.address);
+    //console.log("-----------------------------")
+    const {lockingDeployer} = await deployDeployers();
+    //console.log("lockingDeployer: " + lockingDeployer.address);
 
-    // Extract CCStaking
-    const CCStaking = await ethers.getContractFactory("CCStaking");
+    console.log("-----------------------------")
+    const {ccPoolHandler} = await deployPoolHandlerAndTransferControl(ckiBridge, fdgBridge, lockingDeployer, deployer, deployer);
+    console.log("ccPoolHandler: " + ccPoolHandler.address);
 
-    const ckiStaking = CCStaking.attach(await cccore.CKI_STAKING());
-    const fdgStaking = CCStaking.attach(await cccore.FDG_STAKING());
-    console.log("CCStaking - CKI: " + ckiStaking.address);
-    console.log("CCStaking - FDG: " + fdgStaking.address);
 
-    // Provide CryptoCookies with the exclusivity of all revenue streams
-    await fdgDistr.appChangeStake(cccore.address, ETHER);
+    console.log("-----------------------------")
+    const {ckiStaking, fdgStaking} = await extractStakingAndAllocate(ccPoolHandler);
+    console.log("ckiStaking: " + ckiStaking.address);
+    console.log("fdgStaking: " + fdgStaking.address);
 
-    // Inject Fudge and Cookie into the distribution contracts
-    const startCki = ETHER.mul(1000000000000); // One billion, forever
-    const startFdg = ETHER.mul(500000000); // Five millions, one year
+    console.log("-----------------------------")
+    const {ckiLocking, fdgLocking} = await scheduleActivateExtractLockingPair(ccPoolHandler);
+    console.log("ckiLocking: " + ckiLocking.address);
+    console.log("fdgLocking: " + fdgLocking.address);
 
-    await cki.devMint(startCki);
-    await fdg.devMint(startFdg);
-
-    await cki.approve(ckiDistr.address, startCki);
-    await fdg.approve(fdgDistr.address, startFdg);
-
-    // TODO: Approve is not processed
-    await delay(3000);
-
-    await ckiDistr.injectInvExp(startCki.div(BN(10).pow(18)));
-    await fdgDistr.injectFlatten(startFdg);
+    await fuelDistr(cki, ckiDistr, fdg, fdgDistr);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

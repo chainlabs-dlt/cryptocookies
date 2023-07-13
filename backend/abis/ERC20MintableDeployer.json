@@ -1,0 +1,1 @@
+[{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"inputs":[{"internalType":"string","name":"_name","type":"string"},{"internalType":"string","name":"_symbol","type":"string"}],"name":"deploy","outputs":[{"internalType":"contract ERC20Mintable","name":"","type":"address"}],"stateMutability":"nonpayable","type":"function"}]

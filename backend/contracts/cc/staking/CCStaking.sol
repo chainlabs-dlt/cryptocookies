@@ -2,26 +2,26 @@
 /// Copyright © 2023 Chainlabs Switzerland SA
 /// All Rights Reserved
 
-import "./CCCore.sol";
-import "../wtf/distributors/BaseERC20Distr.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "../../wtf/distributors/erc20/BaseERC20Distr.sol";
 
 pragma solidity ^0.8.18;
 
 /// @title CryptoCookies' Generic Staking Distributor
 /// @author Chainlabs Switzerland SA
-/// @notice This contract allows user to (un)stake their TOKEN to generate revenue.
+/// @notice This contract allows users to (un)stake their TOKEN to generate revenue.
 contract CCStaking is BaseERC20Distr {
-	CCCore public immutable CORE;
+	ERC20Claimable public immutable SOURCE;
 	IERC20 public immutable STAKED_TOKEN;
 
 	/// @notice Constructs a CCStaking contract.
-	/// @param _core CryptoCookies' core contract.
 	/// @param _stakedToken The staked token.
-	/// @param _revToken The revenue token.
-	constructor(address _core, address _stakedToken, address _revToken) BaseERC20Distr(_revToken) {
-		CORE = CCCore(_core);
+	/// @param _source The source contract from which to receive revenue.
+	constructor(
+		address _stakedToken,
+		address _source
+	) BaseERC20Distr(ERC20Claimable(_source).token()) {
 		STAKED_TOKEN = IERC20(_stakedToken);
+		SOURCE = ERC20Claimable(_source);
 	}
 
 	/// @notice Adds stake for the caller in the distributor.
@@ -40,10 +40,9 @@ contract CCStaking is BaseERC20Distr {
 		STAKED_TOKEN.transfer(msg.sender, _amount);
 	}
 
-	/// @dev Automatically triggers a CCCore update.
-	/// Called at every claim.
+	/// @dev Automatically triggers a bridge claim.
+	/// Called at every user claim.
 	function _claimHook() internal override {
-		// Harvest new TOKEN funds from CORE
-		CORE.harvest(address(TOKEN));
+		_addRevenue(SOURCE.claim());
 	}
 }
