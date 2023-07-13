@@ -37,9 +37,9 @@ async function main() {
     console.log("ckiBridge: " + ckiBridge.address);
     console.log("fdgBridge: " + fdgBridge.address);
 
-    console.log("-----------------------------")
+    //console.log("-----------------------------")
     const {lockingDeployer} = await deployDeployers();
-    console.log("lockingDeployer: " + lockingDeployer.address);
+    //console.log("lockingDeployer: " + lockingDeployer.address);
 
     console.log("-----------------------------")
     const {ccPoolHandler} = await deployPoolHandlerAndTransferControl(ckiBridge, fdgBridge, lockingDeployer, deployer, deployer);
