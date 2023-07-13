@@ -35,7 +35,9 @@ export async function deployRevDistrs(cki : any, fdg : any, gauge : any) {
 
 export async function deployCCCore(ckiDistr : any, fdgDistr : any, ccDao : any) {
     const CCCore = await ethers.getContractFactory("CCCore");
+    await delay(2000);
     const cccore = await CCCore.deploy(fdgDistr.address, ckiDistr.address, ccDao.address);
+    await delay(2000);
 
     return {cccore};
 }
@@ -89,13 +91,18 @@ export async function extractStakingAndAllocate(ccPoolHandler : any) {
 
 export async function scheduleActivateExtractLockingPair(ccPoolHandler : any) {
     const CCLocking = await ethers.getContractFactory("CCLocking");
+
+    await delay(2000);
     await ccPoolHandler.scheduleLocking(true, 0, LOCK_PERIOD, LOCK_STAKE);
+    await delay(2000);
     await ccPoolHandler.scheduleLocking(false, 0, LOCK_PERIOD, LOCK_STAKE);
+    await delay(2000);
 
     const ckiLocking = CCLocking.attach(await ccPoolHandler.pools(2));
     const fdgLocking = CCLocking.attach(await ccPoolHandler.pools(3));
 
     await ccPoolHandler.startLocking(ckiLocking.address);
+    await delay(2000);
     await ccPoolHandler.startLocking(fdgLocking.address);
 
     return {ckiLocking, fdgLocking};
@@ -108,7 +115,7 @@ export async function fuelDistr(cki : any, ckiDistr : any, fdg : any, fdgDistr :
     await cki.approve(ckiDistr.address, CKI_FUEL);
     await fdg.approve(fdgDistr.address, FDG_FUEL);
 
-    await delay(3000);
+    await delay(2000);
 
     await ckiDistr.injectInvExp(CKI_FUEL.div(BN(10).pow(18)));
     await fdgDistr.injectFlatten(FDG_FUEL);
