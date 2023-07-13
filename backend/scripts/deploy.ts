@@ -4,47 +4,58 @@ import {
     deployTokens,
     deployRevDistrs,
     deployCCCore,
+    fuelCCCore,
     extractBridges,
+    deployDeployers,
+    deployPoolHandlerAndTransferControl,
+    extractStakingAndAllocate,
+    scheduleActivateExtractLockingPair,
     fuelDistr
 } from "./units-deploy";
 
-async function main() { // Get owner/signer
+async function main() {
     const [deployer] = await ethers.getSigners();
 
-    // Deploy tokens
+    console.log("-----------------------------")
     const {cki, fdg} = await deployTokens();
+    console.log("cki: " + cki.address);
+    console.log("fdg: " + fdg.address);
 
-    await cki.deployed();
-    console.log("CKI: " + cki.address);
-    await fdg.deployed();
-    console.log("FDG: " + fdg.address);
-
-    // Deploy distributors
+    console.log("-----------------------------")
     const {ckiDistr, fdgDistr} = await deployRevDistrs(cki, fdg, deployer);
+    console.log("ckiDistr: " + ckiDistr.address);
+    console.log("fdgDistr: " + fdgDistr.address);
 
-    await ckiDistr.deployed();
-    console.log("CkiDistr: " + ckiDistr.address);
-    await fdgDistr.deployed();
-    console.log("FdgDistr: " + fdgDistr.address);
-
-    // Deploy CCCore
+    console.log("-----------------------------")
     const {cccore} = await deployCCCore(ckiDistr, fdgDistr, deployer);
+    console.log("cccore: " + cccore.address);
 
-    await cccore.deployed();
-    console.log("CCCore: " + cccore.address);
+    await fuelCCCore(ckiDistr, fdgDistr, cccore);
 
-    // Extract Bridges
+    console.log("-----------------------------")
     const {ckiBridge, fdgBridge} = await extractBridges(cccore);
-    console.log("CCBridge - CKI: " + ckiBridge.address);
-    console.log("CCBridge - FDG: " + fdgBridge.address);
+    console.log("ckiBridge: " + ckiBridge.address);
+    console.log("fdgBridge: " + fdgBridge.address);
 
-    // Distributors should only fuel CCCore
-    await ckiDistr.userChangeStake(cccore.address, ETHER);
-    await fdgDistr.userChangeStake(cccore.address, ETHER);
+    console.log("-----------------------------")
+    const {lockingDeployer} = await deployDeployers();
+    console.log("lockingDeployer: " + lockingDeployer.address);
 
-    // TODO handle bridges
+    console.log("-----------------------------")
+    const {ccPoolHandler} = await deployPoolHandlerAndTransferControl(ckiBridge, fdgBridge, lockingDeployer, deployer, deployer);
+    console.log("ccPoolHandler: " + ccPoolHandler.address);
 
-    // Fuel the initial contracts
+
+    console.log("-----------------------------")
+    const {ckiStaking, fdgStaking} = await extractStakingAndAllocate(ccPoolHandler);
+    console.log("ckiStaking: " + ckiStaking.address);
+    console.log("fdgStaking: " + fdgStaking.address);
+
+    console.log("-----------------------------")
+    const {ckiLocking, fdgLocking} = await scheduleActivateExtractLockingPair(ccPoolHandler);
+    console.log("ckiLocking: " + ckiLocking.address);
+    console.log("fdgLocking: " + fdgLocking.address);
+
     await fuelDistr(cki, ckiDistr, fdg, fdgDistr);
 }
 
